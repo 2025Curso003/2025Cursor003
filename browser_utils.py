@@ -47,7 +47,20 @@ class BrowserManager:
 
     def init_browser(self, user_agent=None):
         """初始化浏览器"""
-       
+        # from fake_useragent import UserAgent
+
+        # def get_mac_chrome_ua():
+        #     ua = UserAgent()
+        #     while True:
+        #         agent = ua.chrome
+        #         if "Macintosh" in agent and "Mozilla/5.0" in agent and "Mac OS X" in agent and "AppleWebKit" in agent:
+        #             return agent
+        #         continue
+        
+        #Get a Mac Chrome user agent
+        # user_agent = get_mac_chrome_ua()
+        # logging.info(f"得到的user-agent: {user_agent}")
+        # user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.34';
         co = self._get_browser_options(user_agent)
         co.headless(False)  # 设置为 False 显示浏览器
         

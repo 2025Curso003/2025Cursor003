@@ -164,9 +164,7 @@ def handle_turnstile(tab, max_retries: int = 2, retry_interval: tuple = (1, 2)) 
 
         # 超出最大重试次数
         logging.error(f"验证失败 - 已达到最大重试次数 {max_retries}")
-        logging.error(
-            "请前往开源项目查看更多信息：https://github.com/chengazhen/cursor-auto-free"
-        )
+
         save_screenshot(tab, "failed")
         return False
 
@@ -218,13 +216,14 @@ def get_cursor_session_token(tab, max_attempts: int = 3, retry_interval: int = 2
                 time.sleep(1.5)
                 
                 auth_poll_url = f"https://api2.cursor.sh/auth/poll?uuid={id}&verifier={verifier}"
+                logging.info(f"得到原来的user-agent: {tab.run_js('return navigator.userAgent')}")
                 headers = {
-                    "User-Agent": get_user_agent(),
+                    "User-Agent": tab.run_js('return navigator.userAgent'),
                     "Accept": "*/*"
                 }
                 
                 logging.info(f"轮询认证状态: {auth_poll_url}")
-                response = requests.get(auth_poll_url, headers=headers, timeout=10)
+                response = requests.get(auth_poll_url, headers=headers, timeout=15)
                 
                 if response.status_code == 200:
                     data = response.json()
@@ -273,29 +272,42 @@ def sign_up_account(browser, tab, email, email_password, client_id, refresh_toke
     logging.info(f"正在访问注册页面: {sign_up_url}")
     tab.get(sign_up_url)
 
-    try:
-        if tab.ele("@name=first_name"):
-            logging.info("正在填写个人信息...")
-            tab.actions.click("@name=first_name").input(first_name)
-            logging.info(f"已输入名字: {first_name}")
-            time.sleep(random.uniform(1, 3))
+    max_retries = 1
+    retry_count = 0
 
-            tab.actions.click("@name=last_name").input(last_name)
-            logging.info(f"已输入姓氏: {last_name}")
-            time.sleep(random.uniform(1, 3))
+    while retry_count <= max_retries:
+        try:
+            if tab.ele("@name=first_name"):
+                logging.info("正在填写个人信息...")
+                tab.actions.click("@name=first_name").input(first_name)
+                logging.info(f"已输入名字: {first_name}")
+                time.sleep(random.uniform(1, 3))
 
-            tab.actions.click("@name=email").input(email)
-            logging.info(f"已输入邮箱: {email}")
-            time.sleep(random.uniform(1, 3))
+                tab.actions.click("@name=last_name").input(last_name)
+                logging.info(f"已输入姓氏: {last_name}")
+                time.sleep(random.uniform(1, 3))
 
-            logging.info("提交个人信息...")
-            tab.actions.click("@type=submit")
+                tab.actions.click("@name=email").input(email)
+                logging.info(f"已输入邮箱: {email}")
+                time.sleep(random.uniform(1, 3))
 
-    except Exception as e:
-        logging.error(f"注册页面访问失败: {str(e)}")
-        return False
+                logging.info("提交个人信息...")
+                tab.actions.click("@type=submit")
 
-    handle_turnstile(tab,max_retries=2,retry_interval=(1,2))
+        except Exception as e:
+            logging.error(f"注册页面访问失败: {str(e)}")
+            return False
+
+        if handle_turnstile(tab, max_retries=2, retry_interval=(1,2)):
+            break
+        else:
+            retry_count += 1
+            if retry_count <= max_retries:
+                logging.info("Turnstile验证失败,刷新页面重试...")
+                tab.get(sign_up_url)
+            else:
+                logging.error("Turnstile验证失败且超过重试次数")
+                return False
 
     try:
         if tab.ele("@name=password"):
@@ -336,6 +348,8 @@ def sign_up_account(browser, tab, email, email_password, client_id, refresh_toke
             from outlook_imap_oauth_direct import get_verification_code
             try:
                 logging.info("通过 IMAP OAuth 获取 Outlook 验证码...")
+                # 随机睡眠5到8秒
+                time.sleep(random.uniform(6, 8))
                 code = get_verification_code(email, client_id, refresh_token)
                 if code:
                     logging.info(f"成功获取验证码: {code}")
@@ -439,9 +453,6 @@ def sign_up_account(browser, tab, email, email_password, client_id, refresh_toke
             usage_info = usage_ele.text
             total_usage = usage_info.split("/")[-1].strip()
             logging.info(f"账户可用额度上限: {total_usage}")
-            logging.info(
-                "请前往开源项目查看更多信息：https://github.com/chengazhen/cursor-auto-free"
-            )
     except Exception as e:
         logging.error(f"获取账户额度信息失败: {str(e)}")
 
@@ -498,7 +509,71 @@ def generate_random_name(self, length=6):
             random.choices("abcdefghijklmnopqrstuvwxyz", k=length - 1)
         )
         return first_letter + rest_letters
-        
+
+def get_available_emails(limit=1):
+    """获取可用的邮箱账号信息，并将获取到的记录标记为已使用"""
+    connection = None
+    try:
+        # 连接到MySQL数据库
+        connection = pymysql.connect(
+            host='47.113.188.124',
+            port=3306,
+            database='cursor',
+            user='root',
+            password='198811hndx'
+        )
+
+        with connection.cursor() as cursor:
+            # 查询数据的SQL语句
+            select_query = """
+            SELECT email, password, client_id, refresh_token 
+            FROM cursor_email_info 
+            WHERE use_status = 0 AND valid_status = 1 
+            LIMIT %s
+            FOR UPDATE
+            """
+            # 执行查询操作
+            cursor.execute(select_query, (limit,))
+            # 获取查询结果
+            results = cursor.fetchall()
+
+            # 将结果转换为字典列表
+            emails = []
+            for row in results:
+                email_info = {
+                    'email': row[0],
+                    'password': row[1], 
+                    'client_id': row[2],
+                    'refresh_token': row[3]
+                }
+                emails.append(email_info)
+
+            # 更新使用状态
+            if emails:
+                update_query = """
+                UPDATE cursor_email_info 
+                SET use_status = 1, 
+                    update_time = NOW()
+                WHERE email IN (%s)
+                """
+                format_strings = ','.join(['%s'] * len(emails))
+                cursor.execute(update_query % format_strings, 
+                             [email['email'] for email in emails])
+                connection.commit()
+
+            print(f"Successfully retrieved and updated {len(emails)} email accounts.")
+            return emails
+
+    except Exception as e:
+        print(f"Error: {e}")
+        if connection:
+            connection.rollback()
+        return []
+    finally:
+        if connection:
+            connection.close()
+            print("MySQL connection is closed.")
+
 def save_token_and_email(cursor_token, cursor_email, cursor_email_password, cursor_password, cursor_name, expires_time, cursor_user_sub=None):
     connection = None
     try:
@@ -569,9 +644,6 @@ def print_end_message():
     logging.info("🔥 QQ交流群: 1034718338")
     logging.info("📺 B站UP主: 想回家的前端")
     logging.info("=" * 30)
-    logging.info(
-        "请前往开源项目查看更多信息：https://github.com/chengazhen/cursor-auto-free"
-    )
 
 def get_mac_user_agent():
     """获取Mac OS的用户代理字符串"""
@@ -611,9 +683,6 @@ if __name__ == "__main__":
 
         logging.info("正在初始化邮箱验证模块...")
         email_handler = EmailVerificationHandler()
-        logging.info(
-            "请前往开源项目查看更多信息：https://github.com/chengazhen/cursor-auto-free"
-        )
         logging.info("\n=== 配置信息 ===")
         login_url = "https://authenticator.cursor.sh"
         sign_up_url = "https://authenticator.cursor.sh/sign-up"
@@ -622,46 +691,63 @@ if __name__ == "__main__":
 
 
         email_generator = EmailGenerator()
-        configEmail = ConfigEmail()
-        emails = configEmail.get("emails", [])
-        for email, email_password, client_id, refresh_token in emails:
+        
+        while True:
+            
             try:
-                logging.info("正在生成随机账号信息...")
-                password =  password="".join(
-                                random.choices(
-                                    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*",
-                                    k=12,
-                                )
-                            )
-                first_name = email_generator.generate_random_name()
-                last_name = email_generator.generate_random_name()
 
-                logging.info(f"生成的邮箱账号: {email}")
-                auto_update_cursor_auth = True
+                emails = get_available_emails()
+                if not emails:
+                    logging.info("未找到可用的邮箱。等待10分钟后重试...")
+                    time.sleep(600)  # Wait 10 minutes (600 seconds)
+                    continue
+                for email_info in emails:
+                    email = email_info['email']
+                    email_password = email_info['password']
+                    client_id = email_info['client_id'] 
+                    refresh_token = email_info['refresh_token']
+                    try:
+                        logging.info("正在生成随机账号信息...")
+                        password="".join(
+                                        random.choices(
+                                            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*",
+                                            k=12,
+                                        )
+                                    )
+                        first_name = email_generator.generate_random_name()
+                        last_name = email_generator.generate_random_name()
 
-                browser_manager = BrowserManager()
-                browser = browser_manager.init_browser()
+                        logging.info(f"生成的邮箱账号: {email}")
+                        auto_update_cursor_auth = True
 
-                tab = browser.latest_tab
+                        browser_manager = BrowserManager()
+                        browser = browser_manager.init_browser()
 
-                tab.run_js("try { turnstile.reset() } catch(e) { }")
+                        tab = browser.latest_tab
 
-                logging.info("\n=== 开始注册流程 ===")
-                logging.info(f"正在访问登录页面: {login_url}")
-                tab.get(login_url)
+                        tab.run_js("try { turnstile.reset() } catch(e) { }")
 
-                if sign_up_account(browser, tab, email, email_password, client_id, refresh_token):
-                    logging.info("正在获取会话令牌...")
-                    token = get_cursor_session_token(tab)
-                    # 计算过期时间
-                    expires_time = datetime.now() + timedelta(days=13, hours=23, minutes=50)
-                    # token email 保存到数据库表
-                    logging.info("正在保存数据库...")
-                    save_token_and_email(token, email, email_password, password, f"{first_name} {last_name}", expires_time.strftime('%Y-%m-%d %H:%M:%S'), None)
-            finally:
-                if browser_manager:
-                    browser_manager.quit()
-                    logging.info("浏览器已关闭...")
+                        logging.info("\n=== 开始注册流程 ===")
+                        logging.info(f"正在访问登录页面: {login_url}")
+                        tab.get(login_url)
+
+                        if sign_up_account(browser, tab, email, email_password, client_id, refresh_token):
+                            logging.info("正在获取会话令牌...")
+                            token = get_cursor_session_token(tab)
+                            # 计算过期时间
+                            expires_time = datetime.now() + timedelta(days=13, hours=23, minutes=50)
+                            # token email 保存到数据库表
+                            logging.info("正在保存数据库...")
+                            save_token_and_email(token, email, email_password, password, f"{first_name} {last_name}", expires_time.strftime('%Y-%m-%d %H:%M:%S'), None)
+                    finally:
+                        if browser_manager:
+                            browser_manager.quit()
+                            logging.info("浏览器已关闭...")
+                    continue
+            except Exception as e:
+                print(f"Error getting input: {e}")
+                continue
+        
     except Exception as e:
         logging.error(f"程序执行出现错误: {str(e)}")
         import traceback
