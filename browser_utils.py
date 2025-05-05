@@ -21,29 +21,49 @@ class BrowserManager:
             if proxy and self.browser:
                 logging.info(f"准备切换到新代理: {proxy}")
                 
+                # 保存当前浏览器的cookies
+                old_cookies = self.browser.get_cookies()
+                logging.info("已保存当前浏览器cookies")
+                
+                # 保存当前URL
+                current_url = self.browser.latest_tab.url
+                logging.info(f"当前页面URL: {current_url}")
+                
                 # 关闭旧的浏览器
                 self.browser.quit()
                 
                 # 创建新的浏览器选项
                 co = ChromiumOptions()
-                co.set_argument(f'--proxy-server={proxy}')
+                co.set_proxy(proxy)  # 设置新代理
                 co.set_argument('--incognito')  # 启用隐私模式
                 co.set_argument('--disable-blink-features=AutomationControlled')
                 co.set_argument('--no-sandbox')
                 co.set_argument('--disable-gpu')
                 co.set_argument('--lang=en-US,en')
                 co.set_argument('--disable-extensions')  # 禁用扩展
-                co.set_argument('--disable-default-apps')
-                  # 禁用默认应用
+                co.set_argument('--disable-default-apps')  # 禁用默认应用
+                co.set_argument('--window-position=-9999,-9999')  # 将窗口移出屏幕
+                co.set_argument('--window-size=800,600')  # 设置窗口大小
+                co.headless(False)  # 设置为 False 显示浏览器
                 co.auto_port = True
                 
                 # 创建新的浏览器实例
                 self.browser = Chromium(co)
+                
+                # 恢复到之前的页面
+                self.browser.latest_tab.get(current_url)
+                
+                # 恢复之前的cookies
+                for cookie in old_cookies:
+                    self.browser.latest_tab.set_cookies(cookie)
+                logging.info("已恢复之前的cookies")
+                
                 logging.info(f"成功切换到新代理: {proxy}")
                 return True
+            return False
         except Exception as e:
             logging.error(f"切换代理失败: {e}")
-        return False
+            return False
 
     def init_browser(self, user_agent=None):
         """初始化浏览器"""

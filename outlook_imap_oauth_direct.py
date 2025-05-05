@@ -6,6 +6,7 @@ import base64
 import json
 import re
 import html
+import time
 import requests
 from email.policy import default
 
@@ -76,8 +77,8 @@ def get_email_with_oauth(username, access_token, mark_as_read=False):
         result, data = mail.search(None, "ALL")
         
         if result != "OK" or not data[0]:
-            print("未找到任何邮件，等待10秒后重试...")
-            time.sleep(10)
+            print("未找到任何邮件，等待8秒后重试...")
+            time.sleep(8)
             result, data = mail.search(None, "ALL")
             if result != "OK" or not data[0]:
                 print("重试后仍未找到任何邮件")
