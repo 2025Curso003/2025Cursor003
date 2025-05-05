@@ -767,8 +767,8 @@ if __name__ == "__main__":
 
                 emails = get_available_emails()
                 if not emails:
-                    logging.info("未找到可用的邮箱。等待10分钟后重试...")
-                    time.sleep(600)  # Wait 10 minutes (600 seconds)
+                    logging.info("未找到可用的邮箱。等待5分钟后重试...")
+                    time.sleep(300)
                     continue
                 for email_info in emails:
                     # 打印循环开始时间
