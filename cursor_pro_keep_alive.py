@@ -469,7 +469,7 @@ def sign_up_account(browser_manager, tab, email, email_password, client_id, refr
                 logging.info("邮件浏览器已关闭...") 
         
 
-    handle_turnstile(tab)
+    # handle_turnstile(tab)
 
     wait_time = random.randint(8, 10)
     for i in range(wait_time):
