@@ -303,7 +303,7 @@ def sign_up_account(browser_manager, tab, email, email_password, client_id, refr
                 tab.actions.click("@type=submit")
                 
                 time.sleep(random.uniform(3, 5))
-                if tab.ele("Can‘t verify the user is human. Please try again."):
+                if tab.ele("Can't verify the user is human. Please try again."):
                     logging.error("无法验证是否是人类，重新设置代理...")
                     # 设置email use_status=0
                     update_email_use_status(email, 0)
@@ -320,7 +320,7 @@ def sign_up_account(browser_manager, tab, email, email_password, client_id, refr
         if handle_turnstile(tab, max_retries=2, retry_interval=(1,2)):
             break
         else:
-            # if tab.ele("Can‘t verify the user is human. Please try again."):
+            # if tab.ele("Can't verify the user is human. Please try again."):
             logging.error("无法验证是否是人类，重新设置代理...")
             # 设置email use_status=0
             update_email_use_status(email, 0)
@@ -339,7 +339,7 @@ def sign_up_account(browser_manager, tab, email, email_password, client_id, refr
             logging.info("密码设置完成，等待系统响应...")
 
             handle_turnstile(tab,max_retries=2,retry_interval=(1,2))
-            if tab.ele("Can‘t verify the user is human. Please try again."):
+            if tab.ele("Can't verify the user is human. Please try again."):
                 logging.error("无法验证是否是人类，重新设置代理...")
                 # 设置email use_status=0
                 update_email_use_status(email, 0)
@@ -368,7 +368,7 @@ def sign_up_account(browser_manager, tab, email, email_password, client_id, refr
 
             # 初始化浏览器
             # browser_email_manager = BrowserManagerEmail()
-            handle_turnstile(tab,max_retries=1,retry_interval=(1,2))
+            # handle_turnstile(tab,max_retries=1,retry_interval=(1,2))
             # 获取邮箱验证码    
             from outlook_imap_oauth_direct import get_verification_code
             try:
@@ -449,6 +449,13 @@ def sign_up_account(browser_manager, tab, email, email_password, client_id, refr
                 time.sleep(random.uniform(0.1, 0.3))
                 i += 1
             logging.info("验证码输入完成")
+            time.sleep(random.uniform(3, 5))
+            # 如果出现 server error 则刷新页面重新输入验证码
+            if tab.ele("Server Error"):
+                logging.error("出现 server error 错误，刷新页面重新输入验证码")
+                tab.refresh()
+                time.sleep(random.uniform(3, 5))
+                tab.ele(f"@data-index={i}").input(digit)
             break
         except Exception as e:
             logging.error(f"验证码处理过程出错: {str(e)}")
@@ -464,7 +471,7 @@ def sign_up_account(browser_manager, tab, email, email_password, client_id, refr
 
     handle_turnstile(tab)
 
-    wait_time = random.randint(3, 6)
+    wait_time = random.randint(8, 10)
     for i in range(wait_time):
         logging.info(f"等待系统处理中... 剩余 {wait_time-i} 秒")
         time.sleep(1)
@@ -623,21 +630,21 @@ def update_email_use_status(email, use_status):
             password='198811hndx'
         )
 
-        # 更新使用状态
-        update_query = """
-        UPDATE cursor_email_info 
-        SET use_status = %s, 
-            update_time = NOW()
-        WHERE email = %s
-        """
-        cursor.execute(update_query, (use_status, email))
-        connection.commit()
-        print(f"Successfully updated email use status to {use_status} for email: {email}")
+        with connection.cursor() as cursor:
+            # 更新使用状态
+            update_query = """
+            UPDATE cursor_email_info 
+            SET use_status = %s, 
+                update_time = NOW()
+            WHERE email = %s
+            """
+            cursor.execute(update_query, (use_status, email))
+            connection.commit()
+            print(f"Successfully updated email use status to {use_status} for email: {email}")
     except Exception as e:
         print(f"Error: {e}")
         if connection:
             connection.rollback()
-        return []
     finally:
         if connection:
             connection.close()
