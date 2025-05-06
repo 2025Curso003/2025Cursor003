@@ -786,7 +786,6 @@ if __name__ == "__main__":
                     client_id = email_info['client_id'] 
                     refresh_token = email_info['refresh_token']
                     try:
-                        logging.info("正在生成随机账号信息...")
                         password="".join(
                                         random.choices(
                                             "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*",
@@ -796,7 +795,7 @@ if __name__ == "__main__":
                         first_name = email_generator.generate_random_name()
                         last_name = email_generator.generate_random_name()
 
-                        logging.info(f"生成的邮箱账号: {email}")
+                        logging.info(f"从数据库得到邮箱账号: {email}")
                         auto_update_cursor_auth = True
 
                         browser_manager = BrowserManager()
