@@ -275,7 +275,7 @@ def update_cursor_auth(email=None, access_token=None, refresh_token=None):
     return auth_manager.update_auth(email, access_token, refresh_token)
 
 
-def sign_up_account(browser_manager, tab, email, email_password, client_id, refresh_token):
+def sign_up_account(browser_manager, tab, email, email_password, client_id, refresh_token, get_email_type, proxy_ip=None):
     logging.info("=== 开始注册账号流程 ===")
     logging.info(f"正在访问注册页面: {sign_up_url}")
     tab.get(sign_up_url)
@@ -302,7 +302,7 @@ def sign_up_account(browser_manager, tab, email, email_password, client_id, refr
                 logging.info("提交个人信息...")
                 tab.actions.click("@type=submit")
                 
-                time.sleep(random.uniform(3, 5))
+                time.sleep(random.uniform(2, 3))
                 if tab.ele("Can't verify the user is human. Please try again."):
                     logging.error("无法验证是否是人类，重新设置代理...")
                     # 设置email use_status=0
@@ -337,8 +337,8 @@ def sign_up_account(browser_manager, tab, email, email_password, client_id, refr
             logging.info("提交密码...")
             tab.ele("@type=submit").click()
             logging.info("密码设置完成，等待系统响应...")
-
-            handle_turnstile(tab,max_retries=2,retry_interval=(1,2))
+            time.sleep(random.uniform(2, 3))
+            handle_turnstile(tab,max_retries=1,retry_interval=(1,2))
             if tab.ele("Can't verify the user is human. Please try again."):
                 logging.error("无法验证是否是人类，重新设置代理...")
                 # 设置email use_status=0
@@ -360,35 +360,38 @@ def sign_up_account(browser_manager, tab, email, email_password, client_id, refr
     retry_count = 0  # 初始化重试计数器
     while True:
         try:
-            if tab.ele("Account Settings"):
-                logging.info("注册成功 - 已进入账户设置页面")
-                break
+            # if tab.ele("Account Settings"):
+            #     logging.info("注册成功 - 已进入账户设置页面")
+            #     break
             if tab.ele("@data-index=0"):
                 logging.info("正在获取邮箱验证码...")
 
             # 初始化浏览器
             # browser_email_manager = BrowserManagerEmail()
-            # handle_turnstile(tab,max_retries=1,retry_interval=(1,2))
+            handle_turnstile(tab,max_retries=1,retry_interval=(1,2))
             # 获取邮箱验证码    
-            from outlook_imap_oauth_direct import get_verification_code
-            try:
-                logging.info("通过 IMAP OAuth 获取 Outlook 验证码...")
-                # 随机睡眠5到8秒
-                time.sleep(random.uniform(8, 10))
-                code = get_verification_code(email, client_id, refresh_token)
-                # 得到当前页面的 url
-                current_url = tab.run_js("return window.location.href")
-                logging.info(f"当前页面URL: {current_url}")
-                if code:
-                    logging.info(f"成功获取验证码: {code}")
-                else:
-                    logging.error("未能获取到有效的验证码")
-            except Exception as e:
-                logging.error(f"获取验证码失败: {str(e)}")
-                code = None
-            # # 初始化浏览器
-            # browser_email_manager = BrowserManagerEmail()
+            if get_email_type == 1:
+                from outlook_imap_oauth_direct import get_verification_code
+                try:
+                    logging.info("通过 IMAP OAuth 获取 Outlook 验证码...")
+                    # 随机睡眠5到8秒
+                    time.sleep(random.uniform(1, 3))
+                    code = get_verification_code(email, client_id, refresh_token, proxy_ip)
+                    # 得到当前页面的 url
+                    current_url = tab.run_js("return window.location.href")
+                    logging.info(f"当前页面URL: {current_url}")
+                    if code:
+                        logging.info(f"成功获取验证码: {code}")
+                    else:
+                        logging.error("未能获取到有效的验证码")
+                except Exception as e:
+                    logging.error(f"获取验证码失败: {str(e)}")
+                    code = None
             
+            if get_email_type == 2:
+                # # 初始化浏览器
+                browser_email_manager = BrowserManagerEmail()
+                
             # if email.endswith("@7to.us") or email.endswith("@gmail.com"):
                
             #     # 获取邮箱验证码
@@ -401,10 +404,10 @@ def sign_up_account(browser_manager, tab, email, email_password, client_id, refr
             # if email.endswith("@outlook.com") or email.endswith("@hotmail.com"):
                
             #     # 获取邮箱验证码
-            #     email_handler = GetVerificationCodeOutLook() 
-            #     browserEmail = browser_email_manager.init_browser()
-            #     tabEmail = browserEmail.latest_tab
-            #     code = email_handler.get_verification_code_outlook(browserEmail, tabEmail, email, email_password)
+                email_handler = GetVerificationCodeOutLook() 
+                browserEmail = browser_email_manager.init_browser()
+                tabEmail = browserEmail.latest_tab
+                code = email_handler.get_verification_code_outlook(browserEmail, tabEmail, email, email_password)
             
 
             # if email.endswith("@163.com") :
@@ -471,7 +474,7 @@ def sign_up_account(browser_manager, tab, email, email_password, client_id, refr
 
     # handle_turnstile(tab)
 
-    wait_time = random.randint(8, 10)
+    wait_time = random.randint(6, 8)
     for i in range(wait_time):
         logging.info(f"等待系统处理中... 剩余 {wait_time-i} 秒")
         time.sleep(1)
@@ -561,7 +564,7 @@ def get_available_emails(limit=1):
         with connection.cursor() as cursor:
             # 查询数据的SQL语句
             select_query = """
-            SELECT email, password, client_id, refresh_token 
+            SELECT email, password, client_id, refresh_token, get_email_type
             FROM cursor_email_info 
             WHERE use_status = 0 AND valid_status = 1 
             LIMIT %s
@@ -579,7 +582,8 @@ def get_available_emails(limit=1):
                     'email': row[0],
                     'password': row[1], 
                     'client_id': row[2],
-                    'refresh_token': row[3]
+                    'refresh_token': row[3],
+                    'get_email_type': row[4]
                 }
                 emails.append(email_info)
 
@@ -785,6 +789,7 @@ if __name__ == "__main__":
                     email_password = email_info['password']
                     client_id = email_info['client_id'] 
                     refresh_token = email_info['refresh_token']
+                    get_email_type = email_info['get_email_type']
                     try:
                         password="".join(
                                         random.choices(
@@ -805,15 +810,21 @@ if __name__ == "__main__":
 
                         tab.run_js("try { turnstile.reset() } catch(e) { }")
 
-                        logging.info("\n=== 开始注册流程 ===")
-                        logging.info(f"正在访问登录页面: {login_url}")
-                        tab.get(login_url)
+                        # 获取browser_manager设置的代理IP
+                        proxy_ip = browser_manager.proxy_manager.proxy_ip
+                        logging.info(f"获取到邮件请求代理IP: {proxy_ip}")
 
-                        if sign_up_account(browser_manager, tab, email, email_password, client_id, refresh_token):
+                        # logging.info("\n=== 开始注册流程 ===")
+                        # logging.info(f"正在访问登录页面: {login_url}")
+                        #tab.get(login_url)
+                        
+
+                        logging.info(f"browser_manager的proxy_ip: {proxy_ip}")
+                        if sign_up_account(browser_manager, tab, email, email_password, client_id, refresh_token, get_email_type, proxy_ip):
                             logging.info("正在获取会话令牌...")
                             token = get_cursor_session_token(tab, browser_manager)
                             # 计算过期时间
-                            expires_time = datetime.now() + timedelta(days=13, hours=23, minutes=50)
+                            expires_time = datetime.now() + timedelta(days=12, hours=23, minutes=59)
                             # token email 保存到数据库表
                             logging.info("正在保存数据库...")
                             save_token_and_email(token, email, email_password, password, f"{first_name} {last_name}", expires_time.strftime('%Y-%m-%d %H:%M:%S'), None)

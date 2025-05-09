@@ -10,7 +10,7 @@ import time
 import requests
 from email.policy import default
 
-def refresh_access_token(client_id, refresh_token):
+def refresh_access_token(client_id, refresh_token, proxy_ip=None):
     """刷新访问令牌"""
     token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
     
@@ -28,7 +28,8 @@ def refresh_access_token(client_id, refresh_token):
     print("正在刷新访问令牌...")
     
     try:
-        response = requests.post(token_url, data=data, headers=headers)
+        proxies = {"http": f"http://{proxy_ip}", "https": f"http://{proxy_ip}"} if proxy_ip else None
+        response = requests.post(token_url, data=data, headers=headers, proxies=proxies)
         response.raise_for_status()
         token_data = response.json()
         
@@ -300,7 +301,7 @@ def html_to_text(html_content):
     return text
 
 
-def get_verification_code(username, client_id, refresh_token):
+def get_verification_code(username, client_id, refresh_token, proxy_ip=None):
     """获取邮件中的验证码
     Args:
         username: Outlook邮箱地址
@@ -315,7 +316,7 @@ def get_verification_code(username, client_id, refresh_token):
     print("尝试使用OAuth方式获取邮件...")
     
     # 刷新访问令牌
-    access_token = refresh_access_token(client_id, refresh_token)
+    access_token = refresh_access_token(client_id, refresh_token, proxy_ip)
     print(f"得到access_token: {access_token}")
     
     if access_token:
