@@ -84,8 +84,8 @@ class BrowserManager:
         co = self._get_browser_options(user_agent)
         co.headless(False)  # 设置为 False 显示浏览器
         
-        co.set_argument('--window-position=-9999,-9999')  # 将窗口移出屏幕
-        co.set_argument('--window-size=800,600')  # 设置窗口大小  # 禁用默认应用
+        # 移除窗口位置设置，让浏览器正常显示
+        co.set_argument('--window-size=800,600')  # 设置窗口大小
         
         self.browser = Chromium(co)
         return self.browser

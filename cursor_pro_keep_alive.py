@@ -814,9 +814,9 @@ if __name__ == "__main__":
                         proxy_ip = browser_manager.proxy_manager.proxy_ip
                         logging.info(f"获取到邮件请求代理IP: {proxy_ip}")
 
-                        # logging.info("\n=== 开始注册流程 ===")
-                        # logging.info(f"正在访问登录页面: {login_url}")
-                        #tab.get(login_url)
+                        logging.info("\n=== 开始注册流程 ===")
+                        logging.info(f"正在访问登录页面: {login_url}")
+                        tab.get(login_url)
                         
 
                         logging.info(f"browser_manager的proxy_ip: {proxy_ip}")
