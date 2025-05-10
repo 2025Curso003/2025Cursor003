@@ -29,6 +29,23 @@ def generate_proxy_extension(proxy_host, proxy_port, username, password):
     """
 
     background_js = """
+    var bypassDomains = [
+        "localhost",
+        "*.cloudflare.com",
+        "challenges.cloudflare.com",
+        "*.turnstile.com",
+        "turnstile.com",
+        "client-api.arkoselabs.com",
+        "*.client-api.arkoselabs.com",
+        "cdn.cloudflare.com",
+        "static.cloudflareinsights.com",
+        "*.cloudflareinsights.com",
+        "hcaptcha.com",
+        "*.hcaptcha.com",
+        "assets.hcaptcha.com",
+        "newassets.hcaptcha.com"
+    ];
+
     var config = {
         mode: "fixed_servers",
         rules: {
@@ -37,22 +54,21 @@ def generate_proxy_extension(proxy_host, proxy_port, username, password):
                 host: "%s",
                 port: %s
             },
-            bypassList: [
-                "localhost",
-                "*.cloudflare.com",
-                "challenges.cloudflare.com",
-                "*.turnstile.com",
-                "turnstile.com"
-            ]
+            bypassList: bypassDomains
         }
     };
 
     chrome.proxy.settings.set({value: config, scope: "regular"}, function() {});
 
+    function shouldBypassDomain(url) {
+        return bypassDomains.some(function(domain) {
+            domain = domain.replace('*.', '');
+            return url.includes(domain);
+        });
+    }
+
     function callbackFn(details) {
-        // 跳过 Turnstile 相关域名的代理认证
-        if (details.url.includes('turnstile.com') || 
-            details.url.includes('cloudflare.com')) {
+        if (shouldBypassDomain(details.url)) {
             return {};
         }
         
@@ -70,11 +86,9 @@ def generate_proxy_extension(proxy_host, proxy_port, username, password):
         ['blocking']
     );
 
-    // 监听请求，对特定域名不使用代理
     chrome.webRequest.onBeforeRequest.addListener(
         function(details) {
-            if (details.url.includes('turnstile.com') || 
-                details.url.includes('cloudflare.com')) {
+            if (shouldBypassDomain(details.url)) {
                 return {cancel: false};
             }
         },
