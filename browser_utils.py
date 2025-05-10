@@ -33,19 +33,8 @@ class BrowserManager:
                 self.browser.quit()
                 
                 # 创建新的浏览器选项
-                co = ChromiumOptions()
+                co = self._get_browser_options()
                 co.set_proxy(proxy)  # 设置新代理
-                co.set_argument('--incognito')  # 启用隐私模式
-                co.set_argument('--disable-blink-features=AutomationControlled')
-                co.set_argument('--no-sandbox')
-                co.set_argument('--disable-gpu')
-                co.set_argument('--lang=en-US,en')
-                co.set_argument('--disable-extensions')  # 禁用扩展
-                co.set_argument('--disable-default-apps')  # 禁用默认应用
-                co.set_argument('--window-position=-9999,-9999')  # 将窗口移出屏幕
-                co.set_argument('--window-size=800,600')  # 设置窗口大小
-                co.headless(False)  # 设置为 False 显示浏览器
-                co.auto_port = True
                 
                 # 创建新的浏览器实例
                 self.browser = Chromium(co)
@@ -67,26 +56,7 @@ class BrowserManager:
 
     def init_browser(self, user_agent=None):
         """初始化浏览器"""
-        # from fake_useragent import UserAgent
-
-        # def get_mac_chrome_ua():
-        #     ua = UserAgent()
-        #     while True:
-        #         agent = ua.chrome
-        #         if "Macintosh" in agent and "Mozilla/5.0" in agent and "Mac OS X" in agent and "AppleWebKit" in agent:
-        #             return agent
-        #         continue
-        
-        #Get a Mac Chrome user agent
-        # user_agent = get_mac_chrome_ua()
-        # logging.info(f"得到的user-agent: {user_agent}")
-        # user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.34';
         co = self._get_browser_options(user_agent)
-        co.headless(False)  # 设置为 False 显示浏览器
-        
-        # 移除窗口位置设置，让浏览器正常显示
-        co.set_argument('--window-size=800,600')  # 设置窗口大小
-        
         self.browser = Chromium(co)
         return self.browser
 
@@ -101,23 +71,32 @@ class BrowserManager:
 
         co.set_pref("credentials_enable_service", False)
         co.set_argument("--hide-crash-restore-bubble")
+        
+        # 设置代理
         proxy = self.proxy_manager.get_proxy_pool()
         logging.info(f"使用代理ip: {proxy}")
         if proxy:
             co.set_proxy(proxy)
 
+        # 设置端口
         co.auto_port()
+
+        # 设置 User-Agent
         if user_agent:
             co.set_user_agent(user_agent)
 
-        co.headless(
-            os.getenv("BROWSER_HEADLESS", "True").lower() == "true"
-        )  # 生产环境使用无头模式
+        # 设置无头模式
+        is_headless = os.getenv("CHROME_ARGS", "").find("--headless=new") != -1
+        co.headless(is_headless)
 
-        # Mac 系统特殊处理
-        if sys.platform == "darwin":
-            # co.set_argument("--no-sandbox")
-            co.set_argument("--disable-gpu")
+        # 添加必要的启动参数
+        chrome_args = os.getenv("CHROME_ARGS", "").split()
+        for arg in chrome_args:
+            if arg:
+                co.set_argument(arg)
+
+        # 设置窗口大小
+        co.set_argument('--window-size=800,600')
 
         return co
 

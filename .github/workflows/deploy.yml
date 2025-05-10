@@ -25,6 +25,16 @@ jobs:
         pip install pymysql
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         
+    - name: Install Chrome
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y chromium-browser
+        
+    - name: Set environment variables
+      run: |
+        echo "CHROME_PATH=/usr/bin/chromium-browser" >> $GITHUB_ENV
+        echo "CHROME_ARGS=--headless=new --no-sandbox --disable-dev-shm-usage" >> $GITHUB_ENV
+        
     - name: Run cursor_pro_keep_alive
       run: |
         python cursor_pro_keep_alive.py 
