@@ -22,26 +22,48 @@ class ProxyManager:
                 "Accept": "application/json"
             }
             
+            logging.info(f"正在请求 Webshare API: {api_url}")
             response = requests.get(api_url, headers=headers)
+            logging.info(f"API 响应状态码: {response.status_code}")
+            
             if response.status_code == 200:
                 proxy_data = response.json()
+                logging.debug(f"API 响应数据: {proxy_data}")
                 self.webshare_proxy_list = []
                 
-                for proxy in proxy_data.get('results', []):
-                    proxy_string = f"{proxy['username']}:{proxy['password']}@{proxy['proxy_address']}:{proxy['ports']}"
-                    self.webshare_proxy_list.append(proxy_string)
+                results = proxy_data.get('results', [])
+                logging.info(f"获取到 {len(results)} 个代理")
+                
+                for proxy in results:
+                    try:
+                        # 记录原始代理数据用于调试
+                        logging.debug(f"处理代理数据: {proxy}")
+                        
+                        # 构建代理字符串
+                        proxy_string = f"{proxy['username']}:{proxy['password']}@{proxy['proxy_address']}:{proxy['port']}"
+                        self.webshare_proxy_list.append(proxy_string)
+                        logging.debug(f"成功添加代理: {proxy_string}")
+                    except KeyError as e:
+                        logging.error(f"代理数据缺少必要字段 {e}, 完整数据: {proxy}")
+                        continue
                 
                 if self.webshare_proxy_list:
                     # 随机选择一个代理
                     selected_proxy = random.choice(self.webshare_proxy_list)
                     logging.info(f"成功获取 Webshare 代理: {selected_proxy}")
                     return f"http://{selected_proxy}"
+                else:
+                    logging.error("没有可用的代理")
+                    return None
                     
             logging.error(f"获取 Webshare 代理失败，状态码: {response.status_code}")
+            if response.status_code != 200:
+                logging.error(f"错误响应内容: {response.text}")
             return None
             
         except Exception as e:
-            logging.error(f"获取 Webshare 代理出错: {e}")
+            logging.error(f"获取 Webshare 代理出错: {str(e)}")
+            logging.exception("详细错误信息:")
             return None
         
     def get_proxy_pool(self):
