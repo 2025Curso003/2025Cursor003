@@ -84,6 +84,9 @@ class BrowserManager:
         # 设置 User-Agent
         if user_agent:
             co.set_user_agent(user_agent)
+
+        if os.getenv('GITHUB_ACTIONS') == 'true':
+            co.set_user_agent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
         
         # 设置无头模式
         is_headless = os.getenv("CHROME_ARGS", "").find("--headless=new") != -1

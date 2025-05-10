@@ -10,9 +10,9 @@ class ProxyManager:
     def get_proxy_pool(self):
         """随机获取一个代理"""
         # 检查是否在 GitHub Actions 环境中运行
-        if os.getenv('GITHUB_ACTIONS') == 'true':
-            logging.info("在 GitHub Actions 环境中运行，不使用代理")
-            return None
+        # if os.getenv('GITHUB_ACTIONS') == 'true':
+        #     logging.info("在 GitHub Actions 环境中运行，不使用代理")
+        #     return None
             
 
         try:
