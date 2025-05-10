@@ -74,30 +74,25 @@ class BrowserManager:
         
         # 设置代理
         proxy = self.proxy_manager.get_proxy_pool()
-        logging.info(f"使用代理ip: {proxy}")
         if proxy:
+            logging.info(f"使用代理ip: {proxy}")
+            # 设置代理服务器
             co.set_proxy(proxy)
+            
+            # 如果有代理认证信息，添加代理认证扩展
+            if hasattr(self.proxy_manager, 'current_auth'):
+                auth = self.proxy_manager.current_auth.split(':')
+                if len(auth) == 2:
+                    username, password = auth
+                    co.set_proxy_auth(username, password)
+                    logging.info("已设置代理认证信息")
 
         # 设置端口
         co.auto_port()
 
-        # 设置 User-Agent
-        if user_agent:
-            co.set_user_agent(user_agent)
-
         if os.getenv('GITHUB_ACTIONS') == 'true':
-            co.set_user_agent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chromium/126.0.0.0 Safari/537.36')
+            co.set_user_agent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
         
-        # 设置无头模式
-        is_headless = os.getenv("CHROME_ARGS", "").find("--headless=new") != -1
-        co.headless(is_headless)
-
-        # 添加必要的启动参数
-        chrome_args = os.getenv("CHROME_ARGS", "").split()
-        for arg in chrome_args:
-            if arg:
-                co.set_argument(arg)
-
         # GitHub Actions 环境特殊配置
         if os.getenv('GITHUB_ACTIONS'):
             co.set_argument('--no-sandbox')
@@ -107,19 +102,10 @@ class BrowserManager:
         else:
             co.headless(False)
 
-        if os.getenv('GITHUB_ACTIONS'):
-            co.set_argument('--no-sandbox')
-            co.set_argument('--disable-dev-shm-usage')
-            co.set_argument('--disable-gpu')
-            co.headless(True)
-        else:
-            co.headless(False)
-
         # 设置窗口大小
-        co.set_argument('--window-size=800,600')
+        co.set_argument('--window-size=1920,1080')
 
         co.set_argument('--disable-blink-features=AutomationControlled')
-        # co.set_argument('--disable-web-security')
         co.set_argument('--allow-running-insecure-content')
         co.set_argument('--disable-features=IsolateOrigins,site-per-process')
         co.set_argument('--ignore-certificate-errors') 

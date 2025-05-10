@@ -11,6 +11,7 @@ class ProxyManager:
         # Webshare API 配置
         self.webshare_api_key = os.getenv('WEBSHARE_API_KEY', '')  # 从环境变量获取API密钥
         self.webshare_proxy_list = []
+        self.proxy_auth_list = []  # 存储认证信息
         
     def get_webshare_proxy(self):
         """获取 Webshare 代理"""
@@ -30,6 +31,7 @@ class ProxyManager:
                 proxy_data = response.json()
                 logging.debug(f"API 响应数据: {proxy_data}")
                 self.webshare_proxy_list = []
+                self.proxy_auth_list = []  # 存储认证信息
                 
                 results = proxy_data.get('results', [])
                 logging.info(f"获取到 {len(results)} 个代理")
@@ -39,19 +41,25 @@ class ProxyManager:
                         # 记录原始代理数据用于调试
                         logging.debug(f"处理代理数据: {proxy}")
                         
-                        # 构建代理字符串
-                        proxy_string = f"{proxy['username']}:{proxy['password']}@{proxy['proxy_address']}:{proxy['port']}"
-                        self.webshare_proxy_list.append(proxy_string)
-                        logging.debug(f"成功添加代理: {proxy_string}")
+                        # 分别保存代理地址和认证信息
+                        proxy_address = f"{proxy['proxy_address']}:{proxy['port']}"
+                        auth_info = f"{proxy['username']}:{proxy['password']}"
+                        
+                        self.webshare_proxy_list.append(proxy_address)
+                        self.proxy_auth_list.append(auth_info)
+                        logging.debug(f"成功添加代理: {proxy_address}")
                     except KeyError as e:
                         logging.error(f"代理数据缺少必要字段 {e}, 完整数据: {proxy}")
                         continue
                 
                 if self.webshare_proxy_list:
                     # 随机选择一个代理
-                    selected_proxy = random.choice(self.webshare_proxy_list)
+                    index = random.randint(0, len(self.webshare_proxy_list) - 1)
+                    selected_proxy = self.webshare_proxy_list[index]
+                    # 保存对应的认证信息，以备后用
+                    self.current_auth = self.proxy_auth_list[index]
                     logging.info(f"成功获取 Webshare 代理: {selected_proxy}")
-                    return f"http://{selected_proxy}"
+                    return selected_proxy
                 else:
                     logging.error("没有可用的代理")
                     return None
