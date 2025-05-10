@@ -95,6 +95,23 @@ class BrowserManager:
             if arg:
                 co.set_argument(arg)
 
+        # GitHub Actions 环境特殊配置
+        if os.getenv('GITHUB_ACTIONS'):
+            co.set_argument('--no-sandbox')
+            co.set_argument('--disable-dev-shm-usage')
+            co.set_argument('--disable-gpu')
+            co.headless(True)
+        else:
+            co.headless(False)
+
+        if os.getenv('GITHUB_ACTIONS'):
+            co.set_argument('--no-sandbox')
+            co.set_argument('--disable-dev-shm-usage')
+            co.set_argument('--disable-gpu')
+            co.headless(True)
+        else:
+            co.headless(False)
+
         # 设置窗口大小
         co.set_argument('--window-size=800,600')
 
