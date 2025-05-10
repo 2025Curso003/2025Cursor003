@@ -85,6 +85,9 @@ class BrowserManager:
         if user_agent:
             co.set_user_agent(user_agent)
 
+        if os.getenv('GITHUB_ACTIONS') == 'true':
+            co.set_user_agent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+        
         # 设置无头模式
         is_headless = os.getenv("CHROME_ARGS", "").find("--headless=new") != -1
         co.headless(is_headless)
@@ -115,6 +118,11 @@ class BrowserManager:
         # 设置窗口大小
         co.set_argument('--window-size=800,600')
 
+        co.set_argument('--disable-blink-features=AutomationControlled')
+        # co.set_argument('--disable-web-security')
+        co.set_argument('--allow-running-insecure-content')
+        co.set_argument('--disable-features=IsolateOrigins,site-per-process')
+        co.set_argument('--ignore-certificate-errors') 
         return co
 
     def _get_extension_path(self):
