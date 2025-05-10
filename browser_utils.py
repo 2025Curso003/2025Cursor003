@@ -76,16 +76,13 @@ class BrowserManager:
         proxy = self.proxy_manager.get_proxy_pool()
         if proxy:
             logging.info(f"使用代理ip: {proxy}")
-            # 设置代理服务器
-            co.set_proxy(proxy)
-            
-            # 如果有代理认证信息，添加代理认证扩展
+            # 如果有代理认证信息，构建完整的代理URL
             if hasattr(self.proxy_manager, 'current_auth'):
-                auth = self.proxy_manager.current_auth.split(':')
-                if len(auth) == 2:
-                    username, password = auth
-                    co.set_proxy_auth(username, password)
-                    logging.info("已设置代理认证信息")
+                proxy_with_auth = f"http://{self.proxy_manager.current_auth}@{proxy}"
+                logging.info("使用带认证的代理")
+                co.set_proxy(proxy_with_auth)
+            else:
+                co.set_proxy(proxy)
 
         # 设置端口
         co.auto_port()
@@ -103,7 +100,7 @@ class BrowserManager:
             co.headless(False)
 
         # 设置窗口大小
-        co.set_argument('--window-size=1920,1080')
+        co.set_argument('--window-size=800,600')
 
         co.set_argument('--disable-blink-features=AutomationControlled')
         co.set_argument('--allow-running-insecure-content')

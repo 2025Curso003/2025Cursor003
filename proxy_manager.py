@@ -31,7 +31,6 @@ class ProxyManager:
                 proxy_data = response.json()
                 logging.debug(f"API 响应数据: {proxy_data}")
                 self.webshare_proxy_list = []
-                self.proxy_auth_list = []  # 存储认证信息
                 
                 results = proxy_data.get('results', [])
                 logging.info(f"获取到 {len(results)} 个代理")
@@ -41,12 +40,13 @@ class ProxyManager:
                         # 记录原始代理数据用于调试
                         logging.debug(f"处理代理数据: {proxy}")
                         
-                        # 分别保存代理地址和认证信息
+                        # 构建代理地址和认证信息
                         proxy_address = f"{proxy['proxy_address']}:{proxy['port']}"
-                        auth_info = f"{proxy['username']}:{proxy['password']}"
+                        self.current_auth = f"{proxy['username']}:{proxy['password']}"
                         
+                        # 构建完整的代理URL（包含认证信息）
+                        proxy_with_auth = f"{self.current_auth}@{proxy_address}"
                         self.webshare_proxy_list.append(proxy_address)
-                        self.proxy_auth_list.append(auth_info)
                         logging.debug(f"成功添加代理: {proxy_address}")
                     except KeyError as e:
                         logging.error(f"代理数据缺少必要字段 {e}, 完整数据: {proxy}")
@@ -54,10 +54,7 @@ class ProxyManager:
                 
                 if self.webshare_proxy_list:
                     # 随机选择一个代理
-                    index = random.randint(0, len(self.webshare_proxy_list) - 1)
-                    selected_proxy = self.webshare_proxy_list[index]
-                    # 保存对应的认证信息，以备后用
-                    self.current_auth = self.proxy_auth_list[index]
+                    selected_proxy = random.choice(self.webshare_proxy_list)
                     logging.info(f"成功获取 Webshare 代理: {selected_proxy}")
                     return selected_proxy
                 else:
