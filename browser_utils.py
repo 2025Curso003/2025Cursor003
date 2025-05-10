@@ -3,6 +3,7 @@ import sys
 import os
 import logging
 from dotenv import load_dotenv
+from proxy_auth_extension import generate_proxy_extension
 
 from proxy_manager import ProxyManager
 
@@ -76,13 +77,20 @@ class BrowserManager:
         proxy = self.proxy_manager.get_proxy_pool()
         if proxy:
             logging.info(f"使用代理ip: {proxy}")
-            # 如果有代理认证信息，构建完整的代理URL
-            if hasattr(self.proxy_manager, 'current_auth'):
-                proxy_with_auth = f"http://{self.proxy_manager.current_auth}@{proxy}"
-                logging.info("使用带认证的代理")
-                co.set_proxy(proxy_with_auth)
-            else:
-                co.set_proxy(proxy)
+            try:
+                # 解析代理地址和端口
+                proxy_host, proxy_port = proxy.split(':')
+                
+                # 如果有代理认证信息，生成认证插件
+                if hasattr(self.proxy_manager, 'current_auth'):
+                    username, password = self.proxy_manager.current_auth.split(':')
+                    plugin_dir = generate_proxy_extension(proxy_host, proxy_port, username, password)
+                    co.add_extension(plugin_dir)
+                    logging.info("已添加代理认证插件")
+                else:
+                    co.set_proxy(proxy)
+            except Exception as e:
+                logging.error(f"设置代理时出错: {e}")
 
         # 设置端口
         co.auto_port()
