@@ -16,7 +16,7 @@ jobs:
     
     - name: Check IP Address
       run: |
-        echo "GitHub Actions Runner IP:"
+        echo "GitHub Actions Runner IP :"
         curl -s https://api.ipify.org
         curl -s http://checkip.amazonaws.com
         curl -s https://ipinfo.io/ip
