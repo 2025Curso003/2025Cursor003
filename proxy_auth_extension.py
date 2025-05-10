@@ -37,13 +37,25 @@ def generate_proxy_extension(proxy_host, proxy_port, username, password):
                 host: "%s",
                 port: %s
             },
-            bypassList: ["localhost"]
+            bypassList: [
+                "localhost",
+                "*.cloudflare.com",
+                "challenges.cloudflare.com",
+                "*.turnstile.com",
+                "turnstile.com"
+            ]
         }
     };
 
     chrome.proxy.settings.set({value: config, scope: "regular"}, function() {});
 
     function callbackFn(details) {
+        // 跳过 Turnstile 相关域名的代理认证
+        if (details.url.includes('turnstile.com') || 
+            details.url.includes('cloudflare.com')) {
+            return {};
+        }
+        
         return {
             authCredentials: {
                 username: "%s",
@@ -56,6 +68,20 @@ def generate_proxy_extension(proxy_host, proxy_port, username, password):
         callbackFn,
         {urls: ["<all_urls>"]},
         ['blocking']
+    );
+
+    // 监听请求，对特定域名不使用代理
+    chrome.webRequest.onBeforeRequest.addListener(
+        function(details) {
+            if (details.url.includes('turnstile.com') || 
+                details.url.includes('cloudflare.com')) {
+                return {cancel: false};
+            }
+        },
+        {
+            urls: ["<all_urls>"]
+        },
+        ["blocking"]
     );
     """ % (proxy_host, proxy_port, username, password)
 
