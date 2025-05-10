@@ -79,18 +79,26 @@ class BrowserManager:
             logging.info(f"使用代理ip: {proxy}")
             try:
                 # 解析代理地址和端口
-                proxy_host, proxy_port = proxy.split(':')
+                # proxy_host, proxy_port = proxy.split(':')
                 
                 # 如果有代理认证信息，生成认证插件
-                if hasattr(self.proxy_manager, 'current_auth'):
-                    username, password = self.proxy_manager.current_auth.split(':')
-                    plugin_dir = generate_proxy_extension(proxy_host, proxy_port, username, password)
-                    co.add_extension(plugin_dir)
-                    logging.info("已添加代理认证插件")
-                else:
-                    co.set_proxy(proxy)
+                # if hasattr(self.proxy_manager, 'current_auth') and self.proxy_manager.current_auth:
+                #     username, password = self.proxy_manager.current_auth.split(':')
+                #     logging.info(f"使用代理认证 - 用户名: {username}")
+                #     plugin_dir = generate_proxy_extension(proxy_host, proxy_port, username, password)
+                #     if plugin_dir:
+                #         co.add_extension(plugin_dir)
+                #         logging.info("已添加代理认证插件")
+                #     else:
+                #         logging.error("代理认证插件生成失败")
+                # else:
+                # 如果没有认证信息，直接设置代理
+                co.set_proxy(proxy)
+                logging.info("使用无认证代理")
             except Exception as e:
                 logging.error(f"设置代理时出错: {e}")
+                # 如果设置失败，尝试直接使用代理
+                co.set_proxy(proxy)
 
         # 设置端口
         co.auto_port()
