@@ -14,6 +14,13 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
+    - name: Check IP Address
+      run: |
+        echo "GitHub Actions Runner IP:"
+        curl -s https://api.ipify.org
+        curl -s http://checkip.amazonaws.com
+        curl -s https://ipinfo.io/ip
+        
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
