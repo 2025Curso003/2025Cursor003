@@ -91,7 +91,7 @@ class BrowserManager:
         # 检测运行环境（Linux 或 GitHub Actions）
         is_linux = sys.platform.startswith('linux')
         is_github_actions = os.getenv('GITHUB_ACTIONS') == 'true'
-        
+        logging.info(f"运行环境: {'Linux' if is_linux else '其他'}")
         # 在 Linux 或 GitHub Actions 环境下的特殊配置
         if is_linux or is_github_actions:
             # 用户数据目录设置
