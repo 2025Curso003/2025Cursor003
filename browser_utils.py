@@ -131,13 +131,13 @@ class BrowserManager:
         if is_linux or is_github_actions:
             # co.set_argument('--no-sandbox')  # 在 Linux 环境必需
             co.headless(False)
-            co.set_user_agent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+            # co.set_user_agent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
             logging.info("日志5")
             # 确保 /tmp 目录存在并有正确权限
-            tmp_dirs = ['/tmp/chrome-cache', '/tmp/chrome-user-data']
-            for tmp_dir in tmp_dirs:
-                if not os.path.exists(tmp_dir):
-                    os.makedirs(tmp_dir, mode=0o777, exist_ok=True)
+            # tmp_dirs = ['/tmp/chrome-cache', '/tmp/chrome-user-data']
+            # for tmp_dir in tmp_dirs:
+            #     if not os.path.exists(tmp_dir):
+            #         os.makedirs(tmp_dir, mode=0o777, exist_ok=True)
             
             # # 设置缓存目录
             # co.set_argument('--disk-cache-dir=/tmp/chrome-cache')
