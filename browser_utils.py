@@ -101,12 +101,12 @@ class BrowserManager:
         is_github_actions = os.getenv('GITHUB_ACTIONS') == 'true'
         logging.info("日志3")
         # 基本配置（适用于所有环境）
-        co.set_argument('--no-sandbox')  # 添加到所有环境
+        # co.set_argument('--no-sandbox')  # 添加到所有环境
         co.set_argument('--disable-dev-shm-usage')
         co.set_argument('--disable-gpu')
         co.set_argument('--disable-software-rasterizer')
         co.set_argument('--ignore-certificate-errors')
-        co.set_argument('--disable-web-security')
+        # co.set_argument('--disable-web-security')
         logging.info("日志4")
         # 在 Linux 或 GitHub Actions 环境下的特殊配置
         if is_linux or is_github_actions:
