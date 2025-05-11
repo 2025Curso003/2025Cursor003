@@ -129,7 +129,7 @@ class BrowserManager:
         logging.info("日志4")
         # 在 Linux 或 GitHub Actions 环境下的特殊配置
         if is_linux or is_github_actions:
-            co.set_argument('--no-sandbox')  # 在 Linux 环境必需
+            # co.set_argument('--no-sandbox')  # 在 Linux 环境必需
             co.set_argument('--headless=new')  # 使用新版无头模式
             co.set_user_agent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
             logging.info("日志5")
