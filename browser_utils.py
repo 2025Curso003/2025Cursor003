@@ -14,6 +14,27 @@ class BrowserManager:
     def __init__(self):
         self.proxy_manager = ProxyManager()
         self.browser = None
+        
+        # 检查是否在 Linux 环境下
+        if sys.platform.startswith('linux'):
+            # 设置 DISPLAY 环境变量
+            if not os.getenv('DISPLAY'):
+                os.environ['DISPLAY'] = ':99'
+                logging.info("设置 DISPLAY 环境变量为 :99")
+            
+            # 检查 Xvfb 是否已启动
+            try:
+                import subprocess
+                subprocess.run(['pgrep', 'Xvfb'], check=True)
+                logging.info("检测到 Xvfb 已运行")
+            except subprocess.CalledProcessError:
+                logging.warning("Xvfb 未运行，尝试启动...")
+                try:
+                    # 启动 Xvfb
+                    subprocess.Popen(['Xvfb', ':99', '-screen', '0', '1280x800x24', '-ac'])
+                    logging.info("成功启动 Xvfb")
+                except Exception as e:
+                    logging.error(f"启动 Xvfb 失败: {e}")
 
     def switch_proxy(self):
         """切换到新的代理"""
@@ -101,29 +122,31 @@ class BrowserManager:
         is_github_actions = os.getenv('GITHUB_ACTIONS') == 'true'
         logging.info("日志3")
         # 基本配置（适用于所有环境）
-        # co.set_argument('--no-sandbox')  # 添加到所有环境
         co.set_argument('--disable-dev-shm-usage')
         co.set_argument('--disable-gpu')
         co.set_argument('--disable-software-rasterizer')
         co.set_argument('--ignore-certificate-errors')
-        # co.set_argument('--disable-web-security')
+       
         logging.info("日志4")
         # 在 Linux 或 GitHub Actions 环境下的特殊配置
         if is_linux or is_github_actions:
-            co.set_argument('--headless=new')
+            co.set_argument('--no-sandbox')  # 在 Linux 环境必需
+            co.set_argument('--headless=new')  # 使用新版无头模式
             co.set_user_agent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
             logging.info("日志5")
-            # 其他 Linux 特定配置保持不变
-            # 临时文件目录
-            co.set_argument("--disk-cache-dir=/tmp/chrome-cache")
-            logging.info("日志6")
-            # GPU 相关配置
-            co.set_argument('--disable-gpu-compositing')  # 禁用GPU合成
-            co.set_argument('--disable-gpu-rasterization')  # 禁用GPU光栅化
-            co.set_argument('--disable-3d-apis')  # 禁用3D APIs
-            co.set_argument('--disable-accelerated-2d-canvas')  # 禁用加速2D画布
-            co.set_argument('--disable-accelerated-video-decode')  # 禁用视频解码加速
-            co.set_argument('--disable-accelerated-video-encode')  # 禁用视频编码加速
+            # 确保 /tmp 目录存在并有正确权限
+            tmp_dirs = ['/tmp/chrome-cache', '/tmp/chrome-user-data']
+            for tmp_dir in tmp_dirs:
+                if not os.path.exists(tmp_dir):
+                    os.makedirs(tmp_dir, mode=0o777, exist_ok=True)
+            
+            # 设置缓存目录
+            co.set_argument('--disk-cache-dir=/tmp/chrome-cache')
+            
+            # GPU 和渲染相关配置
+            co.set_argument('--disable-gpu-compositing')
+            co.set_argument('--disable-gpu-rasterization')
+            co.set_argument('--disable-3d-apis')
             
             # SSL 配置
             co.set_argument('--allow-insecure-localhost')
@@ -153,7 +176,7 @@ class BrowserManager:
             co.set_argument('--v=1')  # 详细日志级别
             co.set_argument('--log-level=0')  # 设置日志级别
             
-            logging.info("在Linux/GitHub Actions环境下运行，使用无头模式")
+            logging.info("在Linux环境下运行，使用无头模式")
         else:
             co.headless(False)
             logging.info("在其他环境下运行，使用有界面模式")
