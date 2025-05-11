@@ -142,10 +142,10 @@ def handle_turnstile(tab, max_retries: int = 2, retry_interval: tuple = (1, 2)) 
                     time.sleep(random.uniform(1, 3))
                     challenge_check.click()
                     time.sleep(2)
-
+                    logging.info("点击验证")
                     # 保存验证后的截图
                     save_screenshot(tab, "clicked")
-
+                    logging.info("保存验证后的截图")
                     # 检查验证结果
                     if check_verification_success(tab):
                         logging.info("Turnstile 验证通过")
