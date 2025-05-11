@@ -63,7 +63,27 @@ def generate_proxy_extension(proxy_host, proxy_port, username, password):
         "hcaptcha.com",
         "*.hcaptcha.com",
         "assets.hcaptcha.com",
-        "newassets.hcaptcha.com"
+        "newassets.hcaptcha.com",
+        "challenges.cloudflare.com",
+        "*.challenges.cloudflare.com",
+        "cf-assets.com",
+        "*.cf-assets.com",
+        "*.cf-turnstile-render.com",
+        "cf-turnstile-render.com",
+        "*.cloudflarestream.com",
+        "cloudflarestream.com",
+        "*.cloudflareclient.com",
+        "cloudflareclient.com",
+        "*.cloudflare-dns.com",
+        "cloudflare-dns.com",
+        "*.cloudflareinsights.com",
+        "cloudflareinsights.com",
+        "*.cloudflaressl.com",
+        "cloudflaressl.com",
+        "*.workers.dev",
+        "workers.dev",
+        "*.pages.dev",
+        "pages.dev"
     ];
 
     var config = {

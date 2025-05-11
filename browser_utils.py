@@ -79,22 +79,23 @@ class BrowserManager:
             logging.info(f"使用代理ip: {proxy}")
             try:
                 # 解析代理地址和端口
-                # proxy_host, proxy_port = proxy.split(':')
+                proxy_host, proxy_port = proxy.split(':')
                 
                 # 如果有代理认证信息，生成认证插件
-                # if hasattr(self.proxy_manager, 'current_auth') and self.proxy_manager.current_auth:
-                #     username, password = self.proxy_manager.current_auth.split(':')
-                #     logging.info(f"使用代理认证 - 用户名: {username}")
-                #     plugin_dir = generate_proxy_extension(proxy_host, proxy_port, username, password)
-                #     if plugin_dir:
-                #         co.add_extension(plugin_dir)
-                #         logging.info("已添加代理认证插件")
-                #     else:
-                #         logging.error("代理认证插件生成失败")
-                # else:
-                # 如果没有认证信息，直接设置代理
-                co.set_proxy(proxy)
-                logging.info("使用无认证代理")
+                if hasattr(self.proxy_manager, 'current_auth') and self.proxy_manager.current_auth:
+                    username, password = self.proxy_manager.current_auth.split(':')
+                    logging.info(f"使用代理认证 - 用户名: {username}")
+                    plugin_dir = generate_proxy_extension(proxy_host, proxy_port, username, password)
+                    if plugin_dir:
+                        co.add_extension(plugin_dir)
+                        logging.info("已添加代理认证插件")
+                    else:
+                        logging.error("代理认证插件生成失败")
+                        co.set_proxy(proxy)
+                else:
+                    # 如果没有认证信息，直接设置代理
+                    co.set_proxy(proxy)
+                    logging.info("使用无认证代理")
             except Exception as e:
                 logging.error(f"设置代理时出错: {e}")
                 # 如果设置失败，尝试直接使用代理
@@ -118,10 +119,31 @@ class BrowserManager:
         # 设置窗口大小
         co.set_argument('--window-size=800,600')
 
+        # 优化 Turnstile 验证相关配置
         co.set_argument('--disable-blink-features=AutomationControlled')
         co.set_argument('--allow-running-insecure-content')
         co.set_argument('--disable-features=IsolateOrigins,site-per-process')
-        co.set_argument('--ignore-certificate-errors') 
+        co.set_argument('--ignore-certificate-errors')
+        
+        # 添加额外的配置以优化验证码处理
+        co.set_argument('--disable-web-security')  # 允许跨域请求
+        co.set_argument('--disable-site-isolation-trials')
+        co.set_argument('--disable-features=BlockInsecurePrivateNetworkRequests')
+        
+        # 设置一些性能相关的参数
+        co.set_argument('--disable-dev-shm-usage')
+        co.set_argument('--disable-software-rasterizer')
+        
+        # 设置一些 preferences
+        co.set_pref('profile.managed_default_content_settings.images', 1)  # 允许加载图片
+        co.set_pref('profile.managed_default_content_settings.javascript', 1)  # 允许 JavaScript
+        co.set_pref('profile.managed_default_content_settings.cookies', 1)  # 允许 Cookies
+        co.set_pref('profile.default_content_setting_values.notifications', 2)  # 阻止通知
+        co.set_pref('profile.managed_default_content_settings.plugins', 1)  # 允许插件
+        co.set_pref('profile.managed_default_content_settings.popups', 2)  # 阻止弹窗
+        co.set_pref('profile.managed_default_content_settings.geolocation', 2)  # 阻止地理位置
+        co.set_pref('profile.managed_default_content_settings.media_stream', 2)  # 阻止媒体流
+        
         return co
 
     def _get_extension_path(self):
