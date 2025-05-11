@@ -176,9 +176,16 @@ class BrowserManager:
             co.set_argument('--v=1')  # 详细日志级别
             co.set_argument('--log-level=0')  # 设置日志级别
             
+            # 重要：启用必要的功能
+            co.set_argument('--enable-javascript')
+            co.set_argument('--enable-webgl')  # Turnstile 可能需要
+            co.set_argument('--window-size=1280,800')  # 确保足够的窗口大小
+            
             logging.info("在Linux环境下运行，使用无头模式")
         else:
             co.headless(False)
+            # 设置窗口大小
+            co.set_argument('--window-size=900,800')
             logging.info("在其他环境下运行，使用有界面模式")
 
         # 设置固定的调试端口
@@ -187,8 +194,7 @@ class BrowserManager:
         co.set_argument(f'--remote-debugging-port={debug_port}')
         logging.info(f"设置调试端口: {debug_port}")
         
-        # 设置窗口大小
-        co.set_argument('--window-size=1280,800')
+       
 
         # 自动化相关
         co.set_argument('--disable-blink-features=AutomationControlled')
