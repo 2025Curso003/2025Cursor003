@@ -89,6 +89,7 @@ class BrowserManager:
                 co.set_proxy(proxy)
                 co.set_argument('--proxy-server=' + proxy)
                 co.set_argument('--proxy-bypass-list=<-loopback>')
+                logging.info("日志0")
                 logging.info("使用无认证代理")
             except Exception as e:
                 logging.error(f"设置代理时出错: {e}")
