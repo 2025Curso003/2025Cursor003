@@ -124,8 +124,8 @@ class BrowserManager:
         # 基本配置（适用于所有环境）
         co.set_argument('--disable-dev-shm-usage')
         co.set_argument('--disable-gpu')
-
-
+        # co.set_argument('--ignore-certificate-errors')
+       
         logging.info("日志4")
         # 在 Linux 或 GitHub Actions 环境下的特殊配置
         if is_linux or is_github_actions:
@@ -149,16 +149,37 @@ class BrowserManager:
             
             # SSL 配置
             co.set_argument('--allow-insecure-localhost')
-            # co.set_argument('--disable-web-security')
+            co.set_argument('--disable-web-security')
             co.set_argument('--reduce-security-for-testing')  # 仅用于测试环境
             
-           
-
+            # 内存优化
+            co.set_argument('--disable-extensions')  # 禁用扩展
+            co.set_argument('--disable-dev-tools')  # 禁用开发者工具
+            co.set_argument('--disable-browser-side-navigation')  # 禁用浏览器端导航
+            co.set_argument('--disable-infobars')  # 禁用信息栏
+            
+            # 性能优化
+            co.set_argument('--disable-backgrounding-occluded-windows')  # 禁用后台窗口
+            co.set_argument('--disable-renderer-backgrounding')  # 禁用渲染器后台处理
+            co.set_argument('--disable-background-timer-throttling')  # 禁用后台计时器限制
+            
+            # 安全和稳定性
+            co.set_argument('--disable-translate')  # 禁用翻译
+            co.set_argument('--disable-sync')  # 禁用同步
+            co.set_argument('--disable-default-apps')  # 禁用默认应用
+            co.set_argument('--disable-prompt-on-repost')  # 禁用重新发布提示
+            co.set_argument('--disable-domain-reliability')  # 禁用域可靠性监控
+            
+            # 调试和日志
+            co.set_argument('--enable-logging')  # 启用日志
+            co.set_argument('--v=1')  # 详细日志级别
+            co.set_argument('--log-level=0')  # 设置日志级别
+            
             # 重要：启用必要的功能
             co.set_argument('--enable-javascript')
-            co.set_argument('--enable-webgl')
-            co.set_argument('--use-gl=swiftshader')  # 使用软件渲染
-            co.set_argument('--window-size=1280,800')
+            co.set_argument('--enable-webgl')  # Turnstile 可能需要
+            co.set_argument('--enable-web-security')
+            co.set_argument('--window-size=1280,800')  # 确保足够的窗口大小
             
             logging.info("在Linux环境下运行，使用无头模式")
         else:
