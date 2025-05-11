@@ -94,9 +94,11 @@ class BrowserManager:
                 logging.error(f"设置代理时出错: {e}")
 
         # 检测运行环境
+        logging.info("日志1")
         is_linux = sys.platform.startswith('linux')
+        logging.info("日志2")
         is_github_actions = os.getenv('GITHUB_ACTIONS') == 'true'
-        
+        logging.info("日志3")
         # 基本配置（适用于所有环境）
         co.set_argument('--no-sandbox')  # 添加到所有环境
         co.set_argument('--disable-dev-shm-usage')
@@ -104,16 +106,16 @@ class BrowserManager:
         co.set_argument('--disable-software-rasterizer')
         co.set_argument('--ignore-certificate-errors')
         co.set_argument('--disable-web-security')
-        
+        logging.info("日志4")
         # 在 Linux 或 GitHub Actions 环境下的特殊配置
         if is_linux or is_github_actions:
             co.set_argument('--headless=new')
             co.set_user_agent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
-            
+            logging.info("日志5")
             # 其他 Linux 特定配置保持不变
             # 临时文件目录
             co.set_argument("--disk-cache-dir=/tmp/chrome-cache")
-            
+            logging.info("日志6")
             # GPU 相关配置
             co.set_argument('--disable-gpu-compositing')  # 禁用GPU合成
             co.set_argument('--disable-gpu-rasterization')  # 禁用GPU光栅化
