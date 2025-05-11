@@ -64,6 +64,14 @@ class BrowserManager:
     def _get_browser_options(self, user_agent=None):
         """获取浏览器配置"""
         co = ChromiumOptions()
+        
+        # 设置唯一的用户数据目录
+        import tempfile
+        import uuid
+        user_data_dir = os.path.join(tempfile.gettempdir(), f'chrome-user-data-{uuid.uuid4()}')
+        os.makedirs(user_data_dir, exist_ok=True)
+        co.set_argument(f'--user-data-dir={user_data_dir}')
+        
         try:
             extension_path = self._get_extension_path()
             co.add_extension(extension_path)
@@ -78,54 +86,43 @@ class BrowserManager:
         if proxy:
             logging.info(f"使用代理ip: {proxy}")
             try:
-                # 设置代理
                 co.set_proxy(proxy)
-                # 设置代理相关参数
                 co.set_argument('--proxy-server=' + proxy)
-                # 禁用代理绕过列表
                 co.set_argument('--proxy-bypass-list=<-loopback>')
                 logging.info("使用无认证代理")
             except Exception as e:
                 logging.error(f"设置代理时出错: {e}")
 
-        # 检测运行环境（Linux 或 GitHub Actions）
+        # 检测运行环境
         is_linux = sys.platform.startswith('linux')
         is_github_actions = os.getenv('GITHUB_ACTIONS') == 'true'
-        logging.info(f"运行环境: {'Linux' if is_linux else '其他'}")
+        
+        # 基本配置（适用于所有环境）
+        co.set_argument('--no-sandbox')  # 添加到所有环境
+        co.set_argument('--disable-dev-shm-usage')
+        co.set_argument('--disable-gpu')
+        co.set_argument('--disable-software-rasterizer')
+        co.set_argument('--ignore-certificate-errors')
+        co.set_argument('--disable-web-security')
+        
         # 在 Linux 或 GitHub Actions 环境下的特殊配置
         if is_linux or is_github_actions:
-            # 用户数据目录设置
-            user_data_dir = "/tmp/chrome-user-data"
-            if not os.path.exists(user_data_dir):
-                os.makedirs(user_data_dir, exist_ok=True)
-            co.set_argument(f"--user-data-dir={user_data_dir}")
+            co.set_argument('--headless=new')
+            co.set_user_agent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
             
+            # 其他 Linux 特定配置保持不变
             # 临时文件目录
             co.set_argument("--disk-cache-dir=/tmp/chrome-cache")
             
-            # 基本配置
-            co.set_user_agent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
-            co.set_argument('--no-sandbox')  # 在root用户下必需
-            co.set_argument('--disable-dev-shm-usage')  # 避免共享内存不足
-            
             # GPU 相关配置
-            co.set_argument('--disable-gpu')  # 禁用GPU硬件加速
             co.set_argument('--disable-gpu-compositing')  # 禁用GPU合成
             co.set_argument('--disable-gpu-rasterization')  # 禁用GPU光栅化
-            co.set_argument('--disable-software-rasterizer')  # 禁用软件光栅化
-            co.set_argument('--disable-webgl')  # 禁用WebGL
-            co.set_argument('--disable-webgl2')  # 禁用WebGL 2.0
             co.set_argument('--disable-3d-apis')  # 禁用3D APIs
             co.set_argument('--disable-accelerated-2d-canvas')  # 禁用加速2D画布
             co.set_argument('--disable-accelerated-video-decode')  # 禁用视频解码加速
             co.set_argument('--disable-accelerated-video-encode')  # 禁用视频编码加速
             
-            co.set_argument('--headless=new')  # 新版无头模式
-            
             # SSL 配置
-            co.set_argument('--ignore-certificate-errors')
-            co.set_argument('--ignore-ssl-errors')
-            co.set_argument('--ignore-certificate-errors-spki-list')
             co.set_argument('--allow-insecure-localhost')
             co.set_argument('--disable-web-security')
             co.set_argument('--reduce-security-for-testing')  # 仅用于测试环境
@@ -158,6 +155,12 @@ class BrowserManager:
             co.headless(False)
             logging.info("在其他环境下运行，使用有界面模式")
 
+        # 设置固定的调试端口
+        import random
+        debug_port = random.randint(9222, 9999)
+        co.set_argument(f'--remote-debugging-port={debug_port}')
+        logging.info(f"设置调试端口: {debug_port}")
+        
         # 设置窗口大小
         co.set_argument('--window-size=1280,800')
 
@@ -165,10 +168,6 @@ class BrowserManager:
         co.set_argument('--disable-blink-features=AutomationControlled')
         co.set_argument('--allow-running-insecure-content')
         co.set_argument('--disable-features=IsolateOrigins,site-per-process')
-        co.set_argument('--ignore-certificate-errors')
-        
-        # 设置端口
-        co.auto_port()
         
         return co
 
