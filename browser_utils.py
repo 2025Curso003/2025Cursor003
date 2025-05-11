@@ -107,12 +107,31 @@ class BrowserManager:
             co.set_user_agent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
             co.set_argument('--no-sandbox')  # 在root用户下必需
             co.set_argument('--disable-dev-shm-usage')  # 避免共享内存不足
-            co.set_argument('--disable-gpu')  # 服务器无GPU
+            
+            # GPU 相关配置
+            co.set_argument('--disable-gpu')  # 禁用GPU硬件加速
+            co.set_argument('--disable-gpu-compositing')  # 禁用GPU合成
+            co.set_argument('--disable-gpu-rasterization')  # 禁用GPU光栅化
+            co.set_argument('--disable-software-rasterizer')  # 禁用软件光栅化
+            co.set_argument('--disable-webgl')  # 禁用WebGL
+            co.set_argument('--disable-webgl2')  # 禁用WebGL 2.0
+            co.set_argument('--disable-3d-apis')  # 禁用3D APIs
+            co.set_argument('--disable-accelerated-2d-canvas')  # 禁用加速2D画布
+            co.set_argument('--disable-accelerated-video-decode')  # 禁用视频解码加速
+            co.set_argument('--disable-accelerated-video-encode')  # 禁用视频编码加速
+            
             co.set_argument('--headless=new')  # 新版无头模式
+            
+            # SSL 配置
+            co.set_argument('--ignore-certificate-errors')
+            co.set_argument('--ignore-ssl-errors')
+            co.set_argument('--ignore-certificate-errors-spki-list')
+            co.set_argument('--allow-insecure-localhost')
+            co.set_argument('--disable-web-security')
+            co.set_argument('--reduce-security-for-testing')  # 仅用于测试环境
             
             # 内存优化
             co.set_argument('--disable-extensions')  # 禁用扩展
-            co.set_argument('--disable-software-rasterizer')  # 禁用软件光栅化
             co.set_argument('--disable-dev-tools')  # 禁用开发者工具
             co.set_argument('--disable-browser-side-navigation')  # 禁用浏览器端导航
             co.set_argument('--disable-infobars')  # 禁用信息栏
