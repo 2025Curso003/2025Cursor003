@@ -88,32 +88,69 @@ class BrowserManager:
             except Exception as e:
                 logging.error(f"设置代理时出错: {e}")
 
-        # 设置端口
-        co.auto_port()
-
         # 检测运行环境（Linux 或 GitHub Actions）
         is_linux = sys.platform.startswith('linux')
         is_github_actions = os.getenv('GITHUB_ACTIONS') == 'true'
         
         # 在 Linux 或 GitHub Actions 环境下的特殊配置
         if is_linux or is_github_actions:
+            # 用户数据目录设置
+            user_data_dir = "/tmp/chrome-user-data"
+            if not os.path.exists(user_data_dir):
+                os.makedirs(user_data_dir, exist_ok=True)
+            co.set_argument(f"--user-data-dir={user_data_dir}")
+            
+            # 临时文件目录
+            co.set_argument("--disk-cache-dir=/tmp/chrome-cache")
+            
+            # 基本配置
             co.set_user_agent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
-            co.set_argument('--no-sandbox')
-            co.set_argument('--disable-dev-shm-usage')
-            co.set_argument('--disable-gpu')
-            co.headless(True)
+            co.set_argument('--no-sandbox')  # 在root用户下必需
+            co.set_argument('--disable-dev-shm-usage')  # 避免共享内存不足
+            co.set_argument('--disable-gpu')  # 服务器无GPU
+            co.set_argument('--headless=new')  # 新版无头模式
+            
+            # 内存优化
+            co.set_argument('--disable-extensions')  # 禁用扩展
+            co.set_argument('--disable-software-rasterizer')  # 禁用软件光栅化
+            co.set_argument('--disable-dev-tools')  # 禁用开发者工具
+            co.set_argument('--disable-browser-side-navigation')  # 禁用浏览器端导航
+            co.set_argument('--disable-infobars')  # 禁用信息栏
+            
+            # 性能优化
+            co.set_argument('--disable-backgrounding-occluded-windows')  # 禁用后台窗口
+            co.set_argument('--disable-renderer-backgrounding')  # 禁用渲染器后台处理
+            co.set_argument('--disable-background-timer-throttling')  # 禁用后台计时器限制
+            
+            # 安全和稳定性
+            co.set_argument('--disable-translate')  # 禁用翻译
+            co.set_argument('--disable-sync')  # 禁用同步
+            co.set_argument('--disable-default-apps')  # 禁用默认应用
+            co.set_argument('--disable-prompt-on-repost')  # 禁用重新发布提示
+            co.set_argument('--disable-domain-reliability')  # 禁用域可靠性监控
+            
+            # 调试和日志
+            co.set_argument('--enable-logging')  # 启用日志
+            co.set_argument('--v=1')  # 详细日志级别
+            co.set_argument('--log-level=0')  # 设置日志级别
+            
             logging.info("在Linux/GitHub Actions环境下运行，使用无头模式")
         else:
             co.headless(False)
             logging.info("在其他环境下运行，使用有界面模式")
 
         # 设置窗口大小
-        co.set_argument('--window-size=800,600')
+        co.set_argument('--window-size=1280,800')
 
+        # 自动化相关
         co.set_argument('--disable-blink-features=AutomationControlled')
         co.set_argument('--allow-running-insecure-content')
         co.set_argument('--disable-features=IsolateOrigins,site-per-process')
-        co.set_argument('--ignore-certificate-errors') 
+        co.set_argument('--ignore-certificate-errors')
+        
+        # 设置端口
+        co.auto_port()
+        
         return co
 
     def _get_extension_path(self):
