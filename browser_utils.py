@@ -127,7 +127,7 @@ class BrowserManager:
             
             # SSL 配置
             co.set_argument('--allow-insecure-localhost')
-            co.set_argument('--disable-web-security')
+            # co.set_argument('--disable-web-security')
             co.set_argument('--reduce-security-for-testing')  # 仅用于测试环境
             
             # 内存优化
