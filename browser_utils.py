@@ -124,7 +124,6 @@ class BrowserManager:
         # 基本配置（适用于所有环境）
         co.set_argument('--disable-dev-shm-usage')
         co.set_argument('--disable-gpu')
-        co.set_argument('--disable-software-rasterizer')
         co.set_argument('--ignore-certificate-errors')
        
         logging.info("日志4")
@@ -178,8 +177,9 @@ class BrowserManager:
             
             # 重要：启用必要的功能
             co.set_argument('--enable-javascript')
-            co.set_argument('--enable-webgl')  # Turnstile 可能需要
-            co.set_argument('--window-size=1280,800')  # 确保足够的窗口大小
+            co.set_argument('--enable-webgl')
+            co.set_argument('--use-gl=swiftshader')  # 使用软件渲染
+            co.set_argument('--window-size=1280,800')
             
             logging.info("在Linux环境下运行，使用无头模式")
         else:
