@@ -131,7 +131,7 @@ class BrowserManager:
         if is_linux or is_github_actions:
             co.set_argument('--no-sandbox')  # 在 Linux 环境必需
             co.set_argument('--headless=new')  # 使用新版无头模式
-            # co.set_user_agent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+            co.set_user_agent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
             logging.info("日志5")
             # 确保 /tmp 目录存在并有正确权限
             tmp_dirs = ['/tmp/chrome-cache', '/tmp/chrome-user-data']
@@ -148,9 +148,9 @@ class BrowserManager:
             co.set_argument('--disable-3d-apis')
             
             # SSL 配置
-            co.set_argument('--allow-insecure-localhost')
+            # co.set_argument('--allow-insecure-localhost')
             # co.set_argument('--disable-web-security')
-            co.set_argument('--reduce-security-for-testing')  # 仅用于测试环境
+            # co.set_argument('--reduce-security-for-testing')  # 仅用于测试环境
             
            
 
