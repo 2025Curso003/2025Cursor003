@@ -1,6 +1,6 @@
 DrissionPage==4.1.0.9
 colorama==0.4.5
-python-dotenv==1.0.0
+python-dotenv==0.20.0
 pyinstaller
 pymysql==1.1.0
 fake_useragent==1.4.0
