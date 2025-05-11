@@ -91,17 +91,21 @@ class BrowserManager:
         # 设置端口
         co.auto_port()
 
-        if os.getenv('GITHUB_ACTIONS') == 'true':
-            co.set_user_agent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+        # 检测运行环境（Linux 或 GitHub Actions）
+        is_linux = sys.platform.startswith('linux')
+        is_github_actions = os.getenv('GITHUB_ACTIONS') == 'true'
         
-        # GitHub Actions 环境特殊配置
-        if os.getenv('GITHUB_ACTIONS'):
+        # 在 Linux 或 GitHub Actions 环境下的特殊配置
+        if is_linux or is_github_actions:
+            co.set_user_agent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
             co.set_argument('--no-sandbox')
             co.set_argument('--disable-dev-shm-usage')
             co.set_argument('--disable-gpu')
             co.headless(True)
+            logging.info("在Linux/GitHub Actions环境下运行，使用无头模式")
         else:
             co.headless(False)
+            logging.info("在其他环境下运行，使用有界面模式")
 
         # 设置窗口大小
         co.set_argument('--window-size=800,600')
