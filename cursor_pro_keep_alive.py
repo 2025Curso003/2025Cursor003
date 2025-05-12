@@ -142,10 +142,9 @@ def handle_turnstile(tab, max_retries: int = 2, retry_interval: tuple = (1, 2)) 
                     time.sleep(random.uniform(1, 3))
                     challenge_check.click()
                     time.sleep(2)
-                    logging.info("点击验证")
+                    logging.info("点击 Turnstile 验证...")
                     # 保存验证后的截图
                     save_screenshot(tab, "clicked")
-                    logging.info("保存验证后的截图")
                     # 检查验证结果
                     if check_verification_success(tab):
                         logging.info("Turnstile 验证通过")
@@ -754,8 +753,31 @@ if __name__ == "__main__":
         # logging.info(f"===user_agent===: {user_agent}")
         # 剔除user_agent中的"HeadlessChrome"
         # user_agent = user_agent.replace("HeadlessChrome", "Chrome")
+        
+        # 获取已授权IP
+        response = requests.get(
+        "https://proxy.webshare.io/api/v2/proxy/ipauthorization/",
+        headers={"Authorization": "Token 8c3zvexvw5ifyk6ai93vvlfljnmbknhdepq52kar"}
+        )
+        logging.info(f"已授权IP: {response.json()}")
+        
+        # 从响应中获取第一个授权ID
+        auth_id = None
+        try:
+            auth_id = response.json()['results'][0]['id']
+            logging.info(f"获取到授权ID: {auth_id}")
+        except (KeyError, IndexError) as e:
+            logging.error(f"获取授权ID失败: {str(e)}")
+            auth_id = None
 
-      
+        # 删除授权IP
+        if auth_id:
+            response = requests.delete(
+            f"https://proxy.webshare.io/api/v2/proxy/ipauthorization/{auth_id}/",
+            headers={"Authorization": "Token 8c3zvexvw5ifyk6ai93vvlfljnmbknhdepq52kar"}
+            )
+            logging.info(f"删除授权ID: {auth_id}")
+        
         # 获取当前IP地址
         current_ip = None
         try:
@@ -768,6 +790,8 @@ if __name__ == "__main__":
         except Exception as e:
             logging.error(f"获取IP地址时出错: {str(e)}")
             current_ip = None
+
+        # 授权IP
         response = requests.post(
             "https://proxy.webshare.io/api/v2/proxy/ipauthorization/",
             json={"ip_address": current_ip},
