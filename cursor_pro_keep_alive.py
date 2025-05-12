@@ -598,8 +598,7 @@ def get_available_emails(limit=1):
                 cursor.execute(update_query % format_strings, 
                              [email['email'] for email in emails])
                 connection.commit()
-
-            print(f"Successfully retrieved and updated {len(emails)} email accounts.")
+                print(f"Successfully retrieved and updated {len(emails)} email accounts.")
             return emails
 
     except Exception as e:
@@ -676,7 +675,7 @@ def save_token_and_email(cursor_token, cursor_email, cursor_email_password, curs
             # 提交事务
             connection.commit()
 
-        print("Token and email saved successfully.")
+        logging.info("Token and email saved successfully.")
 
     except Exception as e:
         print(f"Error: {e}")
@@ -734,74 +733,67 @@ def get_mac_user_agent():
         else:
             continue
 
+ # 获取已授权IP
+def delete_auth_id():
+    response = requests.get(
+        "https://proxy.webshare.io/api/v2/proxy/ipauthorization/",
+        headers={"Authorization": "Token 8c3zvexvw5ifyk6ai93vvlfljnmbknhdepq52kar"}
+    )
+    logging.info(f"已授权IP: {response.json()}")
+    
+    # 从响应中获取第一个授权ID
+    auth_id = None
+    try:
+        auth_id = response.json()['results'][0]['id']
+        logging.info(f"获取到授权ID: {auth_id}")
+    except (KeyError, IndexError) as e:
+        logging.error(f"获取授权ID失败: {str(e)}")
+        auth_id = None
+
+    # 删除授权IP
+    if auth_id:
+        response = requests.delete(
+            f"https://proxy.webshare.io/api/v2/proxy/ipauthorization/{auth_id}/",
+            headers={"Authorization": "Token 8c3zvexvw5ifyk6ai93vvlfljnmbknhdepq52kar"}
+        )
+        logging.info(f"删除授权ID: {auth_id}")
+
+def authorize_current_ip():
+    """获取当前IP并进行授权"""
+    current_ip = None
+    try:
+        ip_response = requests.get('https://api.ipify.org')
+        if ip_response.status_code == 200:
+            current_ip = ip_response.text
+            logging.info(f"当前IP地址: {current_ip}")
+        else:
+            logging.warning("无法获取当前IP地址")
+    except Exception as e:
+        logging.error(f"获取IP地址时出错: {str(e)}")
+        current_ip = None
+
+    # 授权IP
+    response = requests.post(
+        "https://proxy.webshare.io/api/v2/proxy/ipauthorization/",
+        json={"ip_address": current_ip},
+        headers={"Authorization": "Token 8c3zvexvw5ifyk6ai93vvlfljnmbknhdepq52kar"})
+    
+    logging.warning(f"IP授权设置结果: {response.json()}")
+
 if __name__ == "__main__":
     print_logo()
     # greater_than_0_45 = check_cursor_version()
     browser_manager = None
     try:
         logging.info("\n=== 初始化程序 ===")
-        # ExitCursor()
 
         logging.info("正在初始化浏览器...")
 
-        # 获取user_agent
-        # user_agent = get_user_agent()
-        # if not user_agent:
-        #     logging.error("获取user agent失败，使用默认值")
-        # user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-
-        # logging.info(f"===user_agent===: {user_agent}")
-        # 剔除user_agent中的"HeadlessChrome"
-        # user_agent = user_agent.replace("HeadlessChrome", "Chrome")
-        
-        # 获取已授权IP
-        response = requests.get(
-        "https://proxy.webshare.io/api/v2/proxy/ipauthorization/",
-        headers={"Authorization": "Token 8c3zvexvw5ifyk6ai93vvlfljnmbknhdepq52kar"}
-        )
-        logging.info(f"已授权IP: {response.json()}")
-        
-        # 从响应中获取第一个授权ID
-        auth_id = None
-        try:
-            auth_id = response.json()['results'][0]['id']
-            logging.info(f"获取到授权ID: {auth_id}")
-        except (KeyError, IndexError) as e:
-            logging.error(f"获取授权ID失败: {str(e)}")
-            auth_id = None
-
-        # 删除授权IP
-        if auth_id:
-            response = requests.delete(
-            f"https://proxy.webshare.io/api/v2/proxy/ipauthorization/{auth_id}/",
-            headers={"Authorization": "Token 8c3zvexvw5ifyk6ai93vvlfljnmbknhdepq52kar"}
-            )
-            logging.info(f"删除授权ID: {auth_id}")
-        
-        # 获取当前IP地址
-        current_ip = None
-        try:
-            ip_response = requests.get('https://api.ipify.org')
-            if ip_response.status_code == 200:
-                current_ip = ip_response.text
-                logging.info(f"当前IP地址: {current_ip}")
-            else:
-                logging.warning("无法获取当前IP地址")
-        except Exception as e:
-            logging.error(f"获取IP地址时出错: {str(e)}")
-            current_ip = None
-
-        # 授权IP
-        response = requests.post(
-            "https://proxy.webshare.io/api/v2/proxy/ipauthorization/",
-            json={"ip_address": current_ip},
-            headers={"Authorization": "Token 8c3zvexvw5ifyk6ai93vvlfljnmbknhdepq52kar"})
-        
-        logging.warning(f"IP授权设置结果: {response.json()}")
-        
-
-        # 获取并打印浏览器的user-agent
-        # user_agent = browser.latest_tab.run_js("return navigator.userAgent")
+        if os.getenv('GITHUB_ACTIONS') == 'true':
+            # 删除已授权IP
+            delete_auth_id()
+            # 授权当前IP
+            authorize_current_ip()
 
         logging.info("正在初始化邮箱验证模块...")
         email_handler = EmailVerificationHandler()

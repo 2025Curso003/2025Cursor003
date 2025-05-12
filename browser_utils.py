@@ -138,9 +138,9 @@ class BrowserManager:
         logging.info(f"设置调试端口: {debug_port}")
         
         # 自动化相关
-        co.set_argument('--disable-blink-features=AutomationControlled')
-        co.set_argument('--allow-running-insecure-content')
-        co.set_argument('--disable-features=IsolateOrigins,site-per-process')
+        # co.set_argument('--disable-blink-features=AutomationControlled')
+        # co.set_argument('--allow-running-insecure-content')
+        # co.set_argument('--disable-features=IsolateOrigins,site-per-process')
         
         return co
 

@@ -76,18 +76,14 @@ class ProxyManager:
     def get_proxy_pool(self):
         """获取代理"""
         try:
-            # 优先使用 Webshare 代理
-            if self.webshare_api_key:
+            # 如果 Webshare 不可用，使用备用代理
+            if os.getenv('GITHUB_ACTIONS') == 'true' and self.webshare_api_key:
+                # 海外代理
+                # 优先使用 Webshare 代理
                 proxy = self.get_webshare_proxy()
                 if proxy:
                     self.proxy_ip = proxy
                     return proxy
-            
-            # 如果 Webshare 不可用，使用备用代理
-            if os.getenv('GITHUB_ACTIONS') == 'true':
-                # 海外代理
-                api_url = "https://api.haiwaidaili.net/abroad?token=a54cd531a3dad7ce364bcc2f92cba110&num=1&format=1&protocol=http&country=&state=&city=&sep=1&csep=&area="
-                logging.info("使用海外代理")
             else:
                 # api_url = "https://api.hailiangip.com:8522/api/getIpEncrypt?dataType=1&encryptParam=SlDyzgfgDW12vuaMHmQkM1l3svlLMXCHw0IlSHvOue3lVhShpdEjb9vG2YRiwpyEPcEigFrowb8LwrKtIDRCi2nxZO4gzU%2FNBKc7dcEloB6dRtYN%2FWLh1y5OUBVBECwLaba73pX8g9o%2BOwUVVgZXqClj3XytwbUPdk0POJVVN4HYFsJvJYxeLU9YDql4IJq6KHmQBjYm32MK13MpScW7XN0Jv%2FQlqwlcd4gkrYI6AFg%3D"
                 # 这里替换为您的代理API地址
