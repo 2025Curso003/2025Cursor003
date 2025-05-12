@@ -756,7 +756,25 @@ if __name__ == "__main__":
         # user_agent = user_agent.replace("HeadlessChrome", "Chrome")
 
       
-
+        # 获取当前IP地址
+        current_ip = None
+        try:
+            ip_response = requests.get('https://api.ipify.org')
+            if ip_response.status_code == 200:
+                current_ip = ip_response.text
+                logging.info(f"当前IP地址: {current_ip}")
+            else:
+                logging.warning("无法获取当前IP地址")
+        except Exception as e:
+            logging.error(f"获取IP地址时出错: {str(e)}")
+            current_ip = None
+        response = requests.post(
+            "https://proxy.webshare.io/api/v2/proxy/ipauthorization/",
+            json={"ip_address": current_ip},
+            headers={"Authorization": "Token 8c3zvexvw5ifyk6ai93vvlfljnmbknhdepq52kar"})
+        
+        logging.warning(f"IP授权设置结果: {response.json()}")
+        
 
         # 获取并打印浏览器的user-agent
         # user_agent = browser.latest_tab.run_js("return navigator.userAgent")

@@ -30,11 +30,37 @@ class BrowserManager:
             except subprocess.CalledProcessError:
                 logging.warning("Xvfb 未运行，尝试启动...")
                 try:
-                    # 启动 Xvfb
-                    subprocess.Popen(['Xvfb', ':99', '-screen', '0', '1280x800x24', '-ac'])
+                    # 启动 Xvfb，添加 -kb 参数禁用键盘
+                    xvfb_cmd = [
+                        'Xvfb', ':99',
+                        '-screen', '0', '1280x800x24',
+                        '-ac',
+                        '-nolisten', 'tcp',
+                        '-dpi', '96',
+                        '+extension', 'RANDR',
+                        '+extension', 'RENDER',
+                        '-kb'  # 禁用键盘
+                    ]
+                    subprocess.Popen(xvfb_cmd)
                     logging.info("成功启动 Xvfb")
+                    
+                    # 等待 Xvfb 启动
+                    import time
+                    time.sleep(1)
+                    
+                    # 设置键盘映射（可选）
+                    try:
+                        subprocess.run(['setxkbmap', '-model', 'pc105', '-layout', 'us'], check=True)
+                        logging.info("已设置键盘映射")
+                    except Exception as e:
+                        logging.warning(f"设置键盘映射失败: {e}")
+                        
                 except Exception as e:
                     logging.error(f"启动 Xvfb 失败: {e}")
+                    
+            # 设置 XAUTHORITY 环境变量（可选）
+            if not os.getenv('XAUTHORITY'):
+                os.environ['XAUTHORITY'] = '/root/.Xauthority'
 
     def switch_proxy(self):
         """切换到新的代理"""
@@ -110,77 +136,21 @@ class BrowserManager:
                 co.set_proxy(proxy)
                 co.set_argument('--proxy-server=' + proxy)
                 co.set_argument('--proxy-bypass-list=<-loopback>')
-                logging.info("日志0")
                 logging.info("使用无认证代理")
             except Exception as e:
                 logging.error(f"设置代理时出错: {e}")
 
         # 检测运行环境
-        logging.info("日志1")
         is_linux = sys.platform.startswith('linux')
-        logging.info("日志2")
         is_github_actions = os.getenv('GITHUB_ACTIONS') == 'true'
-        logging.info("日志3")
         # 基本配置（适用于所有环境）
         co.set_argument('--disable-dev-shm-usage')
         co.set_argument('--disable-gpu')
-        # co.set_argument('--ignore-certificate-errors')
        
-        logging.info("日志4")
         # 在 Linux 或 GitHub Actions 环境下的特殊配置
         if is_linux or is_github_actions:
-            # co.set_argument('--no-sandbox')  # 在 Linux 环境必需
             co.headless(False)
-            # co.set_user_agent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
-            logging.info("日志5")
-            # 确保 /tmp 目录存在并有正确权限
-            # tmp_dirs = ['/tmp/chrome-cache', '/tmp/chrome-user-data']
-            # for tmp_dir in tmp_dirs:
-            #     if not os.path.exists(tmp_dir):
-            #         os.makedirs(tmp_dir, mode=0o777, exist_ok=True)
-            
-            # # 设置缓存目录
-            # co.set_argument('--disk-cache-dir=/tmp/chrome-cache')
-            
-            # # GPU 和渲染相关配置
-            # co.set_argument('--disable-gpu-compositing')
-            # co.set_argument('--disable-gpu-rasterization')
-            # co.set_argument('--disable-3d-apis')
-            
-            # # SSL 配置
-            # co.set_argument('--allow-insecure-localhost')
-            # co.set_argument('--disable-web-security')
-            # co.set_argument('--reduce-security-for-testing')  # 仅用于测试环境
-            
-            # # 内存优化
-            # co.set_argument('--disable-extensions')  # 禁用扩展
-            # co.set_argument('--disable-dev-tools')  # 禁用开发者工具
-            # co.set_argument('--disable-browser-side-navigation')  # 禁用浏览器端导航
-            # co.set_argument('--disable-infobars')  # 禁用信息栏
-            
-            # # 性能优化
-            # co.set_argument('--disable-backgrounding-occluded-windows')  # 禁用后台窗口
-            # co.set_argument('--disable-renderer-backgrounding')  # 禁用渲染器后台处理
-            # co.set_argument('--disable-background-timer-throttling')  # 禁用后台计时器限制
-            
-            # # 安全和稳定性
-            # co.set_argument('--disable-translate')  # 禁用翻译
-            # co.set_argument('--disable-sync')  # 禁用同步
-            # co.set_argument('--disable-default-apps')  # 禁用默认应用
-            # co.set_argument('--disable-prompt-on-repost')  # 禁用重新发布提示
-            # co.set_argument('--disable-domain-reliability')  # 禁用域可靠性监控
-            
-            # # 调试和日志
-            # co.set_argument('--enable-logging')  # 启用日志
-            # co.set_argument('--v=1')  # 详细日志级别
-            # co.set_argument('--log-level=0')  # 设置日志级别
-            
-            # # 重要：启用必要的功能
-            # co.set_argument('--enable-javascript')
-            # co.set_argument('--enable-webgl')  # Turnstile 可能需要
-            # co.set_argument('--enable-web-security')
             co.set_argument('--window-size=1280,800')  # 确保足够的窗口大小
-            
             logging.info("在Linux环境下运行，使用无头模式")
         else:
             co.headless(False)
@@ -194,8 +164,6 @@ class BrowserManager:
         co.set_argument(f'--remote-debugging-port={debug_port}')
         logging.info(f"设置调试端口: {debug_port}")
         
-       
-
         # 自动化相关
         co.set_argument('--disable-blink-features=AutomationControlled')
         co.set_argument('--allow-running-insecure-content')
