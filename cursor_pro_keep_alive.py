@@ -737,7 +737,7 @@ def get_mac_user_agent():
 def delete_auth_id():
     response = requests.get(
         "https://proxy.webshare.io/api/v2/proxy/ipauthorization/",
-        headers={"Authorization": "Token 8c3zvexvw5ifyk6ai93vvlfljnmbknhdepq52kar"}
+        headers={"Authorization": "Token t7lkf1rmu3rvr154l73yp387lmyf8m7xd8b8v2hj"}
     )
     logging.info(f"已授权IP: {response.json()}")
     
@@ -754,7 +754,7 @@ def delete_auth_id():
     if auth_id:
         response = requests.delete(
             f"https://proxy.webshare.io/api/v2/proxy/ipauthorization/{auth_id}/",
-            headers={"Authorization": "Token 8c3zvexvw5ifyk6ai93vvlfljnmbknhdepq52kar"}
+            headers={"Authorization": "Token t7lkf1rmu3rvr154l73yp387lmyf8m7xd8b8v2hj"}
         )
         logging.info(f"删除授权ID: {auth_id}")
 
@@ -776,7 +776,7 @@ def authorize_current_ip():
     response = requests.post(
         "https://proxy.webshare.io/api/v2/proxy/ipauthorization/",
         json={"ip_address": current_ip},
-        headers={"Authorization": "Token 8c3zvexvw5ifyk6ai93vvlfljnmbknhdepq52kar"})
+        headers={"Authorization": "Token t7lkf1rmu3rvr154l73yp387lmyf8m7xd8b8v2hj"})
     
     logging.warning(f"IP授权设置结果: {response.json()}")
 
