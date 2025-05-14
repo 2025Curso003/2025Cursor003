@@ -76,15 +76,15 @@ class ProxyManager:
     def get_proxy_pool(self):
         """获取代理"""
         try:
-            # 如果 Webshare 不可用，使用备用代理
-            if os.getenv('GITHUB_ACTIONS') == 'true' and self.webshare_api_key:
-                # 海外代理
-                # 优先使用 Webshare 代理
-                proxy = self.get_webshare_proxy()
-                if proxy:
-                    self.proxy_ip = proxy
-                    return proxy
-            else:
+             # 如果 Webshare 不可用，使用备用代理
+            # if os.getenv('GITHUB_ACTIONS') == 'true' and self.webshare_api_key:
+            #     # 海外代理
+            #     # 优先使用 Webshare 代理
+            #     proxy = self.get_webshare_proxy()
+            #     if proxy:
+            #         self.proxy_ip = proxy
+            #         return proxy
+            # else:
                 # api_url = "https://api.hailiangip.com:8522/api/getIpEncrypt?dataType=1&encryptParam=SlDyzgfgDW12vuaMHmQkM1l3svlLMXCHw0IlSHvOue3lVhShpdEjb9vG2YRiwpyEPcEigFrowb8LwrKtIDRCi2nxZO4gzU%2FNBKc7dcEloB6dRtYN%2FWLh1y5OUBVBECwLaba73pX8g9o%2BOwUVVgZXqClj3XytwbUPdk0POJVVN4HYFsJvJYxeLU9YDql4IJq6KHmQBjYm32MK13MpScW7XN0Jv%2FQlqwlcd4gkrYI6AFg%3D"
                 # 这里替换为您的代理API地址
                 # 快代理
@@ -94,8 +94,8 @@ class ProxyManager:
                 # 海外代理 试用中
                 # api_url = "https://api.haiwaidaili.net/abroad?token=a54cd531a3dad7ce364bcc2f92cba110&num=1&format=1&protocol=http&country=&state=&city=&sep=1&csep=&area="
                 # 卓越代理
-                api_url = "http://zhuoyuekeji.zhuoyuejituan.com:66/SML.aspx?action=GetIP&OrderNumber=c96ca54b71b9597eb7da08a370803422&isp=&poolnumber=0&AuthMode=0&UserName=zf772835869@88.com&UserPwd=q1w2e3r4&RangeNumber=0&Split=&Address=&qty=1"
-                logging.info("使用卓越代理")
+            api_url = "http://zhuoyuekeji.zhuoyuejituan.com:66/SML.aspx?action=GetIP&OrderNumber=c96ca54b71b9597eb7da08a370803422&isp=&poolnumber=0&AuthMode=0&UserName=zf772835869@88.com&UserPwd=q1w2e3r4&RangeNumber=0&Split=&Address=&qty=1"
+            logging.info("使用卓越代理")
             
             logging.info(f"正在获取代理IP: {api_url}")
             response = requests.get(api_url)
