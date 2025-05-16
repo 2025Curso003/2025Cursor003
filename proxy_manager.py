@@ -80,7 +80,8 @@ class ProxyManager:
             if os.getenv('GITHUB_ACTIONS') == 'true' and self.webshare_api_key:
                 # 海外代理
                 # 优先使用 Webshare 代理
-                proxy = self.get_webshare_proxy()
+                # proxy = self.get_webshare_proxy()
+                proxy = "p.webshare.io"
                 if proxy:
                     self.proxy_ip = proxy
                     return proxy
