@@ -2,6 +2,7 @@ import requests
 import logging
 import os
 import random
+import sys
 
 class ProxyManager:
     def __init__(self):
@@ -9,7 +10,7 @@ class ProxyManager:
         self.proxy_pool = []
         self.proxy_ip = None
         # Webshare API 配置
-        self.webshare_api_key = os.getenv('WEBSHARE_API_KEY', '')  # 从环境变量获取API密钥
+        self.webshare_api_key = os.getenv('WEBSHARE_API_KEY', 't7lkf1rmu3rvr154l73yp387lmyf8m7xd8b8v2hj')  # 从环境变量获取API密钥
         self.webshare_proxy_list = []
         self.proxy_auth_list = []  # 存储认证信息
         
@@ -77,7 +78,8 @@ class ProxyManager:
         """获取代理"""
         try:
             # 如果 Webshare 不可用，使用备用代理
-            if os.getenv('GITHUB_ACTIONS') == 'true' and self.webshare_api_key:
+            # 如果是linux系统
+            if sys.platform.startswith('linux') or os.getenv('GITHUB_ACTIONS') == 'true':
                 # 海外代理
                 # 优先使用 Webshare 代理
                 proxy = self.get_webshare_proxy()
