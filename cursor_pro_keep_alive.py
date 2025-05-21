@@ -830,8 +830,12 @@ if __name__ == "__main__":
                 emails = get_available_emails()
                 if not emails:
                     logging.info("未找到可用的邮箱。等待5分钟后重试...")
-                    time.sleep(300)
-                    continue
+                    if os.getenv('GITHUB_ACTIONS') == 'true':
+                        delete_auth_id()
+                        break;
+                    else:
+                        time.sleep(300)
+                        continue
                 for email_info in emails:
                     # 打印循环开始时间
                     start_time = time.time()
@@ -894,10 +898,6 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f"Error getting input: {e}")
                 continue
-        
-        if os.getenv('GITHUB_ACTIONS') == 'true':
-            # 删除已授权IP
-            delete_auth_id()
        
     except Exception as e:
         logging.error(f"程序执行出现错误: {str(e)}")
