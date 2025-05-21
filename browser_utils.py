@@ -128,7 +128,7 @@ class BrowserManager:
             logging.info("在Linux环境下运行，使用无头模式")
         else:
             co.headless(False)
-            co.set_argument('--window-size=900,800')
+            co.set_argument('--window-size=500,400')
             logging.info("在其他环境下运行，使用有界面模式")
 
         # 设置固定的调试端口
