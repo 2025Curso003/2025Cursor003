@@ -907,4 +907,4 @@ if __name__ == "__main__":
     finally:
         if browser_manager:
             browser_manager.quit()
-        input("\n程序执行完毕，按回车键退出...")
+        sys.exit(0)
