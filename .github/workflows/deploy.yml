@@ -1,4 +1,4 @@
-name: Run Cursor Pro Keep Alive
+name: Cursor Pro Token Generator
 
 on:
   push:

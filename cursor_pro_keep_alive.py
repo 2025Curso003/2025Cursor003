@@ -735,6 +735,19 @@ def get_mac_user_agent():
 
  # 获取已授权IP
 def delete_auth_id():
+
+    current_ip = None
+    try:
+        ip_response = requests.get('https://api.ipify.org')
+        if ip_response.status_code == 200:
+            current_ip = ip_response.text
+            logging.info(f"当前IP地址: {current_ip}")
+        else:
+            logging.warning("无法获取当前IP地址")
+    except Exception as e:
+        logging.error(f"获取IP地址时出错: {str(e)}")
+        current_ip = None
+        
     response = requests.get(
         "https://proxy.webshare.io/api/v2/proxy/ipauthorization/",
         headers={"Authorization": "Token t7lkf1rmu3rvr154l73yp387lmyf8m7xd8b8v2hj"}
@@ -744,8 +757,14 @@ def delete_auth_id():
     # 从响应中获取第一个授权ID
     auth_id = None
     try:
-        auth_id = response.json()['results'][0]['id']
-        logging.info(f"获取到授权ID: {auth_id}")
+        results = response.json()['results']
+        for result in results:
+            if result['ip_address'] == current_ip:
+                auth_id = result['id']
+                logging.info(f"获取到当前IP {current_ip} 的授权ID: {auth_id}")
+                break
+        if auth_id is None:
+            logging.warning(f"未找到当前IP {current_ip} 的授权ID")
     except (KeyError, IndexError) as e:
         logging.error(f"获取授权ID失败: {str(e)}")
         auth_id = None
@@ -790,8 +809,6 @@ if __name__ == "__main__":
         logging.info("正在初始化浏览器...")
 
         if os.getenv('GITHUB_ACTIONS') == 'true':
-            # 删除已授权IP
-            delete_auth_id()
             # 授权当前IP
             authorize_current_ip()
 
@@ -878,6 +895,10 @@ if __name__ == "__main__":
                 print(f"Error getting input: {e}")
                 continue
         
+        if os.getenv('GITHUB_ACTIONS') == 'true':
+            # 删除已授权IP
+            delete_auth_id()
+       
     except Exception as e:
         logging.error(f"程序执行出现错误: {str(e)}")
         import traceback
