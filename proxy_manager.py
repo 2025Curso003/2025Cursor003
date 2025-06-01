@@ -18,7 +18,7 @@ class ProxyManager:
         """获取 Webshare 代理"""
         try:
             # 获取代理列表
-            api_url = "https://proxy.webshare.io/api/v2/proxy/list/?mode=direct&page=1&page_size=25"
+            api_url = "https://proxy.webshare.io/api/v2/proxy/list/?mode=direct&page=1&page_size=100"
             headers = {
                 "Authorization": f"Token {self.webshare_api_key}",
                 "Accept": "application/json"
